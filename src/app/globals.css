@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -18,11 +19,6 @@
    7. Base styles
    ============================================================ */
 
-/* ============================================================
-   1. FONTS
-   ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 /* ============================================================
    2. COLOUR SCALES
@@ -191,6 +187,9 @@
   /* Destructive */
   --destructive:            hsl(353 66% 51%);
   --destructive-foreground: hsl(353 40% 97%);
+  --destructive-subtle:     hsl(353 45% 92%);
+  --destructive-border:     hsl(353 55% 82%);
+  --destructive-text:       hsl(353 66% 41%);
 
   /* Borders & Inputs */
   --border:                 hsl(224 20% 85%);
@@ -402,6 +401,9 @@
   /* Destructive */
   --destructive:            hsl(353 63% 60%);
   --destructive-foreground: hsl(353 66% 13%);
+  --destructive-subtle:     hsl(353 66% 21%);
+  --destructive-border:     hsl(353 66% 31%);
+  --destructive-text:       hsl(353 63% 60%);
 
   /* Borders & Inputs */
   --border: hsl(224 28% 27%);
@@ -522,9 +524,57 @@
   --color-accent-foreground:            var(--accent-foreground);
   --color-destructive:                  var(--destructive);
   --color-destructive-foreground:       var(--destructive-foreground);
+  --color-destructive-subtle:           var(--destructive-subtle);
+  --color-destructive-border:           var(--destructive-border);
+  --color-destructive-text:             var(--destructive-text);
   --color-border:                       var(--border);
   --color-input:                        var(--input);
   --color-ring:                         var(--ring);
+  --color-link:                         var(--link);
+  --color-link-hover:                   var(--link-hover);
+  --color-link-visited:                 var(--link-visited);
+  --color-focus-ring:                   var(--focus-ring);
+  --color-disabled-bg:                  var(--disabled-bg);
+  --color-disabled-text:                var(--disabled-text);
+  --color-disabled-border:              var(--disabled-border);
+  --color-placeholder:                  var(--placeholder);
+  --color-success:                      var(--success);
+  --color-success-foreground:           var(--success-foreground);
+  --color-success-subtle:               var(--success-subtle);
+  --color-success-border:               var(--success-border);
+  --color-success-text:                 var(--success-text);
+  --color-active:                       var(--active);
+  --color-active-foreground:            var(--active-foreground);
+  --color-active-subtle:                var(--active-subtle);
+  --color-active-border:                var(--active-border);
+  --color-active-text:                  var(--active-text);
+  --color-warning:                      var(--warning);
+  --color-warning-foreground:           var(--warning-foreground);
+  --color-warning-subtle:               var(--warning-subtle);
+  --color-warning-border:               var(--warning-border);
+  --color-warning-text:                 var(--warning-text);
+  --color-pending:                      var(--pending);
+  --color-pending-foreground:           var(--pending-foreground);
+  --color-pending-subtle:               var(--pending-subtle);
+  --color-pending-border:               var(--pending-border);
+  --color-pending-text:                 var(--pending-text);
+  --color-info:                         var(--info);
+  --color-info-foreground:              var(--info-foreground);
+  --color-info-subtle:                  var(--info-subtle);
+  --color-info-border:                  var(--info-border);
+  --color-info-text:                    var(--info-text);
+  --color-highlight:                    var(--highlight);
+  --color-highlight-foreground:         var(--highlight-foreground);
+  --color-highlight-subtle:             var(--highlight-subtle);
+  --color-highlight-border:             var(--highlight-border);
+  --color-highlight-text:               var(--highlight-text);
+  --color-neutral-btn:                  var(--neutral-btn);
+  --color-neutral-btn-foreground:       var(--neutral-btn-foreground);
+  --color-table-row-selected:           var(--table-row-selected);
+  --color-table-row-selected-border:    var(--table-row-selected-border);
+  --color-accent-500:                   var(--accent-500);
+  --color-accent-400:                   var(--accent-400);
+  --color-accent-900:                   var(--accent-900);
   --color-sidebar:                      var(--sidebar);
   --color-sidebar-foreground:           var(--sidebar-foreground);
   --color-sidebar-primary:              var(--sidebar-primary);
