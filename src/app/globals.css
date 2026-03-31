@@ -1,0 +1,642 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   CLUBSPARK UI — Design System
+   Version: 1.0.0
+
+   Structure:
+   1. Google Fonts import
+   2. Colour scales (raw palette 50-900)
+   3. Semantic tokens — light mode
+   4. Semantic tokens — dark mode
+   5. Theme inline mappings
+   6. Custom Tailwind utilities
+   7. Base styles
+   ============================================================ */
+
+/* ============================================================
+   1. FONTS
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+/* ============================================================
+   2. COLOUR SCALES
+   Raw palette — not used directly in components.
+   Components always use semantic tokens below.
+   ============================================================ */
+
+:root {
+
+  /* Primary Blue — #0026AF */
+  --primary-50:  hsl(227 60% 97%);
+  --primary-100: hsl(227 60% 93%);
+  --primary-200: hsl(227 60% 85%);
+  --primary-300: hsl(227 70% 73%);
+  --primary-400: hsl(227 80% 62%);
+  --primary-500: hsl(227 100% 34%);
+  --primary-600: hsl(227 100% 28%);
+  --primary-700: hsl(227 100% 22%);
+  --primary-800: hsl(227 100% 16%);
+  --primary-900: hsl(227 100% 10%);
+
+  /* Accent Green — #02E075 */
+  --accent-50:  hsl(151 60% 97%);
+  --accent-100: hsl(151 60% 92%);
+  --accent-200: hsl(151 65% 82%);
+  --accent-300: hsl(151 75% 68%);
+  --accent-400: hsl(151 90% 55%);
+  --accent-500: hsl(151 98% 44%);
+  --accent-600: hsl(151 98% 35%);
+  --accent-700: hsl(151 90% 26%);
+  --accent-800: hsl(151 85% 18%);
+  --accent-900: hsl(151 80% 11%);
+
+  /* Info Blue — #004DEE */
+  --info-50:  hsl(221 60% 97%);
+  --info-100: hsl(221 60% 93%);
+  --info-200: hsl(221 60% 85%);
+  --info-300: hsl(221 80% 73%);
+  --info-400: hsl(221 90% 62%);
+  --info-500: hsl(221 100% 47%);
+  --info-600: hsl(221 100% 38%);
+  --info-700: hsl(221 100% 29%);
+  --info-800: hsl(221 100% 20%);
+  --info-900: hsl(221 100% 13%);
+
+  /* Active/Live Teal — #169E8F */
+  --active-50:  hsl(173 46% 97%);
+  --active-100: hsl(173 46% 92%);
+  --active-200: hsl(173 50% 82%);
+  --active-300: hsl(173 60% 68%);
+  --active-400: hsl(173 70% 52%);
+  --active-500: hsl(173 76% 35%);
+  --active-600: hsl(173 76% 28%);
+  --active-700: hsl(173 76% 21%);
+  --active-800: hsl(173 76% 15%);
+  --active-900: hsl(173 76% 10%);
+
+  /* Success Green — #1A7A3C */
+  --success-50:  hsl(141 40% 97%);
+  --success-100: hsl(141 40% 92%);
+  --success-200: hsl(141 45% 82%);
+  --success-300: hsl(141 55% 68%);
+  --success-400: hsl(141 60% 52%);
+  --success-500: hsl(141 65% 29%);
+  --success-600: hsl(141 65% 23%);
+  --success-700: hsl(141 65% 18%);
+  --success-800: hsl(141 65% 13%);
+  --success-900: hsl(141 65% 8%);
+
+  /* Pending Yellow — #FFD177 */
+  --pending-50:  hsl(40 100% 97%);
+  --pending-100: hsl(40 100% 92%);
+  --pending-200: hsl(40 100% 84%);
+  --pending-300: hsl(40 100% 76%);
+  --pending-400: hsl(40 100% 68%);
+  --pending-500: hsl(40 100% 60%);
+  --pending-600: hsl(40 95% 48%);
+  --pending-700: hsl(40 90% 36%);
+  --pending-800: hsl(40 85% 24%);
+  --pending-900: hsl(40 80% 14%);
+
+  /* Warning Orange — #DC5100 */
+  --warning-50:  hsl(22 60% 97%);
+  --warning-100: hsl(22 65% 92%);
+  --warning-200: hsl(22 70% 82%);
+  --warning-300: hsl(22 80% 68%);
+  --warning-400: hsl(22 90% 56%);
+  --warning-500: hsl(22 100% 43%);
+  --warning-600: hsl(22 100% 35%);
+  --warning-700: hsl(22 100% 27%);
+  --warning-800: hsl(22 100% 19%);
+  --warning-900: hsl(22 100% 12%);
+
+  /* Destructive Red — #D42F42 */
+  --destructive-50:  hsl(353 40% 97%);
+  --destructive-100: hsl(353 45% 92%);
+  --destructive-200: hsl(353 55% 82%);
+  --destructive-300: hsl(353 60% 70%);
+  --destructive-400: hsl(353 63% 60%);
+  --destructive-500: hsl(353 66% 51%);
+  --destructive-600: hsl(353 66% 41%);
+  --destructive-700: hsl(353 66% 31%);
+  --destructive-800: hsl(353 66% 21%);
+  --destructive-900: hsl(353 66% 13%);
+
+  /* Highlight Purple — #6E56F2 */
+  --highlight-50:  hsl(249 52% 97%);
+  --highlight-100: hsl(249 55% 92%);
+  --highlight-200: hsl(249 60% 84%);
+  --highlight-300: hsl(249 70% 74%);
+  --highlight-400: hsl(249 80% 68%);
+  --highlight-500: hsl(249 86% 64%);
+  --highlight-600: hsl(249 86% 52%);
+  --highlight-700: hsl(249 80% 40%);
+  --highlight-800: hsl(249 75% 28%);
+  --highlight-900: hsl(249 70% 17%);
+
+  /* Neutral Blue-Grey — #272F45 */
+  --neutral-50:  hsl(224 17% 97%);
+  --neutral-100: hsl(224 17% 93%);
+  --neutral-200: hsl(224 20% 85%);
+  --neutral-300: hsl(224 22% 73%);
+  --neutral-400: hsl(224 24% 58%);
+  --neutral-500: hsl(224 26% 44%);
+  --neutral-600: hsl(224 27% 34%);
+  --neutral-700: hsl(224 28% 27%);
+  --neutral-800: hsl(224 28% 21%);
+  --neutral-900: hsl(224 28% 14%);
+
+  /* Black & White */
+  --black: hsl(0 0% 0%);
+  --white: hsl(0 0% 100%);
+
+}
+
+/* ============================================================
+   3. SEMANTIC TOKENS — LIGHT MODE
+   ============================================================ */
+
+:root {
+
+  /* Page & Surfaces */
+  --background:             hsl(224 17% 97%);
+  --foreground:             hsl(224 28% 21%);
+  --card:                   hsl(0 0% 100%);
+  --card-foreground:        hsl(224 28% 21%);
+  --popover:                hsl(0 0% 100%);
+  --popover-foreground:     hsl(224 28% 21%);
+
+  /* Primary */
+  --primary:                hsl(227 100% 34%);
+  --primary-foreground:     hsl(227 60% 97%);
+
+  /* Secondary */
+  --secondary:              hsl(227 60% 93%);
+  --secondary-foreground:   hsl(227 100% 34%);
+
+  /* Muted */
+  --muted:                  hsl(224 17% 93%);
+  --muted-foreground:       hsl(224 26% 44%);
+
+  /* Accent — shadcn hover/interaction states */
+  --accent:                 hsl(224 17% 93%);
+  --accent-foreground:      hsl(224 28% 21%);
+
+  /* Destructive */
+  --destructive:            hsl(353 66% 51%);
+  --destructive-foreground: hsl(353 40% 97%);
+
+  /* Borders & Inputs */
+  --border:                 hsl(224 20% 85%);
+  --input:                  hsl(224 20% 85%);
+  --ring:                   hsl(227 100% 34%);
+
+  /* Border Radius — base value, all others derive from this */
+  --radius: 0.375rem; /* 6px */
+
+  /* Typography
+     Override --font-heading and --font-body in theme files.
+     By default both use DM Sans.
+     For themes with a display heading font, override --font-heading only.
+     For themes where h4-h6 should use body font, add that rule to the theme file. */
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-heading: 'DM Sans', system-ui, sans-serif;
+  --font-mono:    ui-monospace, monospace;
+
+  /* Font Weights */
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  /* Button font weight — override to 600 in public theme */
+  --btn-font-weight: 500;
+
+  /* Links */
+  --link:         hsl(227 100% 28%);
+  --link-hover:   hsl(227 100% 22%);
+  --link-visited: hsl(249 86% 52%);
+
+  /* Focus */
+  --focus-ring:        hsl(227 100% 34%);
+  --focus-ring-offset: 2px;
+  --focus-ring-width:  2px;
+
+  /* Disabled */
+  --disabled-bg:     hsl(224 17% 93%);
+  --disabled-text:   hsl(224 24% 58%);
+  --disabled-border: hsl(224 20% 85%);
+
+  /* Placeholder */
+  --placeholder: hsl(224 24% 58%);
+
+  /* Status — Success */
+  --success:            hsl(141 65% 29%);
+  --success-foreground: hsl(141 40% 97%);
+  --success-subtle:     hsl(141 40% 92%);
+  --success-border:     hsl(141 45% 82%);
+  --success-text:       hsl(141 65% 23%);
+
+  /* Status — Active/Live */
+  --active:            hsl(173 76% 35%);
+  --active-foreground: hsl(173 46% 97%);
+  --active-subtle:     hsl(173 46% 92%);
+  --active-border:     hsl(173 50% 82%);
+  --active-text:       hsl(173 76% 28%);
+
+  /* Status — Warning */
+  --warning:            hsl(22 100% 43%);
+  --warning-foreground: hsl(22 60% 97%);
+  --warning-subtle:     hsl(22 65% 92%);
+  --warning-border:     hsl(22 70% 82%);
+  --warning-text:       hsl(22 100% 35%);
+
+  /* Status — Pending */
+  --pending:            hsl(40 100% 60%);
+  --pending-foreground: hsl(40 80% 14%);
+  --pending-subtle:     hsl(40 100% 92%);
+  --pending-border:     hsl(40 100% 84%);
+  --pending-text:       hsl(40 90% 36%);
+
+  /* Status — Info */
+  --info:            hsl(221 100% 47%);
+  --info-foreground: hsl(221 60% 97%);
+  --info-subtle:     hsl(221 60% 93%);
+  --info-border:     hsl(221 60% 85%);
+  --info-text:       hsl(221 100% 38%);
+
+  /* Status — Highlight */
+  --highlight:            hsl(249 86% 64%);
+  --highlight-foreground: hsl(249 52% 97%);
+  --highlight-subtle:     hsl(249 55% 92%);
+  --highlight-border:     hsl(249 60% 84%);
+  --highlight-text:       hsl(249 86% 52%);
+
+  /* Neutral Button */
+  --neutral-btn:            hsl(0 0% 0%);
+  --neutral-btn-foreground: hsl(0 0% 100%);
+
+  /* Table Row Selection */
+  --table-row-selected:        hsl(173 46% 92%);
+  --table-row-selected-border: hsl(173 76% 35%);
+
+  /* Sidebar */
+  --sidebar:                    hsl(0 0% 100%);
+  --sidebar-foreground:         hsl(224 28% 21%);
+  --sidebar-primary:            hsl(227 100% 34%);
+  --sidebar-primary-foreground: hsl(227 60% 97%);
+  --sidebar-accent:             hsl(224 17% 93%);
+  --sidebar-accent-foreground:  hsl(224 28% 21%);
+  --sidebar-border:             hsl(224 20% 85%);
+  --sidebar-ring:               hsl(227 100% 34%);
+
+  /* Charts — categorical palette */
+  --chart-1: hsl(151 98% 44%);  /* accent green — leads, max contrast */
+  --chart-2: hsl(227 80% 62%);  /* primary blue */
+  --chart-3: hsl(249 80% 68%);  /* highlight purple */
+  --chart-4: hsl(22 90% 56%);   /* warning orange */
+  --chart-5: hsl(40 100% 68%);  /* pending yellow */
+  --chart-6: hsl(173 70% 52%);  /* active teal */
+  --chart-7: hsl(221 90% 62%);  /* info blue */
+  --chart-8: hsl(353 63% 60%);  /* destructive red — last, implies negative */
+
+  /* Shadows — subtle */
+  --shadow-sm: 0 1px 2px 0 hsl(224 28% 21% / 0.05);
+  --shadow-md: 0 2px 8px 0 hsl(224 28% 21% / 0.08), 0 1px 2px 0 hsl(224 28% 21% / 0.04);
+  --shadow-lg: 0 4px 16px 0 hsl(224 28% 21% / 0.10), 0 2px 4px 0 hsl(224 28% 21% / 0.04);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Z-index scale */
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+
+  /* Component Heights — buttons & inputs */
+  --height-sm: 2rem;    /* 32px */
+  --height-md: 2.5rem;  /* 40px */
+  --height-lg: 3rem;    /* 48px */
+  --height-xl: 3.5rem;  /* 56px */
+
+  /* Component Padding — buttons & inputs */
+  --padding-sm: 0 0.75rem;
+  --padding-md: 0 1rem;
+  --padding-lg: 0 1.5rem;
+  --padding-xl: 0 2rem;
+
+  /* Icon Sizes */
+  --icon-2xs: 0.5rem;    /* 8px  — arrows only */
+  --icon-xs:  0.75rem;   /* 12px */
+  --icon-sm:  1rem;      /* 16px */
+  --icon-md:  1.25rem;   /* 20px — default */
+  --icon-lg:  1.5rem;    /* 24px */
+  --icon-xl:  2rem;      /* 32px */
+  --icon-2xl: 3rem;      /* 48px */
+
+  /* Avatar Sizes */
+  --avatar-2xs: 1.5rem;   /* 24px */
+  --avatar-xs:  1.75rem;  /* 28px */
+  --avatar-sm:  2rem;     /* 32px */
+  --avatar-md:  2.5rem;   /* 40px — default */
+  --avatar-lg:  3rem;     /* 48px */
+  --avatar-xl:  4rem;     /* 64px */
+  --avatar-2xl: 5rem;     /* 80px */
+  --avatar-3xl: 6rem;     /* 96px */
+
+  /* Spacing Scale */
+  --spacing-xs:  0.25rem;  /* 4px  */
+  --spacing-sm:  0.5rem;   /* 8px  */
+  --spacing-md:  0.75rem;  /* 12px */
+  --spacing-lg:  1rem;     /* 16px */
+  --spacing-xl:  1.5rem;   /* 24px */
+  --spacing-2xl: 2rem;     /* 32px */
+  --spacing-3xl: 3rem;     /* 48px */
+
+}
+
+/* ============================================================
+   4. SEMANTIC TOKENS — DARK MODE
+   Uses brighter scale stops to maintain vibrancy
+   and contrast on dark backgrounds.
+   ============================================================ */
+
+.dark {
+
+  /* Page & Surfaces */
+  --background:             hsl(224 28% 14%);
+  --foreground:             hsl(224 17% 93%);
+  --card:                   hsl(224 28% 21%);
+  --card-foreground:        hsl(224 17% 93%);
+  --popover:                hsl(224 28% 21%);
+  --popover-foreground:     hsl(224 17% 93%);
+
+  /* Primary */
+  --primary:                hsl(227 80% 62%);
+  --primary-foreground:     hsl(227 100% 10%);
+
+  /* Secondary */
+  --secondary:              hsl(224 28% 27%);
+  --secondary-foreground:   hsl(224 17% 93%);
+
+  /* Muted */
+  --muted:                  hsl(224 28% 27%);
+  --muted-foreground:       hsl(224 22% 73%);
+
+  /* Accent */
+  --accent:                 hsl(224 28% 27%);
+  --accent-foreground:      hsl(224 17% 93%);
+
+  /* Destructive */
+  --destructive:            hsl(353 63% 60%);
+  --destructive-foreground: hsl(353 66% 13%);
+
+  /* Borders & Inputs */
+  --border: hsl(224 28% 27%);
+  --input:  hsl(224 28% 27%);
+  --ring:   hsl(227 80% 62%);
+
+  /* Links */
+  --link:         hsl(227 80% 62%);
+  --link-hover:   hsl(227 70% 73%);
+  --link-visited: hsl(249 80% 68%);
+
+  /* Focus */
+  --focus-ring: hsl(227 80% 62%);
+
+  /* Disabled */
+  --disabled-bg:     hsl(224 28% 27%);
+  --disabled-text:   hsl(224 26% 44%);
+  --disabled-border: hsl(224 28% 27%);
+
+  /* Placeholder */
+  --placeholder: hsl(224 26% 44%);
+
+  /* Status — Success */
+  --success:            hsl(141 60% 52%);
+  --success-foreground: hsl(141 65% 8%);
+  --success-subtle:     hsl(141 65% 13%);
+  --success-border:     hsl(141 65% 23%);
+  --success-text:       hsl(141 60% 52%);
+
+  /* Status — Active/Live */
+  --active:            hsl(173 70% 52%);
+  --active-foreground: hsl(173 76% 10%);
+  --active-subtle:     hsl(173 76% 15%);
+  --active-border:     hsl(173 76% 21%);
+  --active-text:       hsl(173 70% 52%);
+
+  /* Status — Warning */
+  --warning:            hsl(22 90% 56%);
+  --warning-foreground: hsl(22 100% 12%);
+  --warning-subtle:     hsl(22 100% 19%);
+  --warning-border:     hsl(22 100% 27%);
+  --warning-text:       hsl(22 90% 56%);
+
+  /* Status — Pending */
+  --pending:            hsl(40 100% 68%);
+  --pending-foreground: hsl(40 80% 14%);
+  --pending-subtle:     hsl(40 85% 24%);
+  --pending-border:     hsl(40 90% 36%);
+  --pending-text:       hsl(40 100% 68%);
+
+  /* Status — Info */
+  --info:            hsl(221 90% 62%);
+  --info-foreground: hsl(221 100% 13%);
+  --info-subtle:     hsl(221 100% 20%);
+  --info-border:     hsl(221 100% 29%);
+  --info-text:       hsl(221 90% 62%);
+
+  /* Status — Highlight */
+  --highlight:            hsl(249 80% 68%);
+  --highlight-foreground: hsl(249 70% 17%);
+  --highlight-subtle:     hsl(249 75% 28%);
+  --highlight-border:     hsl(249 80% 40%);
+  --highlight-text:       hsl(249 80% 68%);
+
+  /* Neutral Button — inverts in dark mode */
+  --neutral-btn:            hsl(0 0% 100%);
+  --neutral-btn-foreground: hsl(0 0% 0%);
+
+  /* Table Row Selection */
+  --table-row-selected:        hsl(173 76% 15%);
+  --table-row-selected-border: hsl(173 70% 52%);
+
+  /* Sidebar */
+  --sidebar:                    hsl(224 28% 18%);
+  --sidebar-foreground:         hsl(224 17% 93%);
+  --sidebar-primary:            hsl(227 80% 62%);
+  --sidebar-primary-foreground: hsl(227 100% 10%);
+  --sidebar-accent:             hsl(224 28% 27%);
+  --sidebar-accent-foreground:  hsl(224 17% 93%);
+  --sidebar-border:             hsl(224 28% 27%);
+  --sidebar-ring:               hsl(227 80% 62%);
+
+  /* Charts — brighter stops for dark backgrounds */
+  --chart-1: hsl(151 90% 55%);
+  --chart-2: hsl(227 80% 62%);
+  --chart-3: hsl(249 80% 68%);
+  --chart-4: hsl(22 90% 56%);
+  --chart-5: hsl(40 100% 68%);
+  --chart-6: hsl(173 70% 52%);
+  --chart-7: hsl(221 90% 62%);
+  --chart-8: hsl(353 63% 60%);
+
+  /* Shadows — stronger on dark */
+  --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.20);
+  --shadow-md: 0 2px 8px 0 hsl(0 0% 0% / 0.30), 0 1px 2px 0 hsl(0 0% 0% / 0.20);
+  --shadow-lg: 0 4px 16px 0 hsl(0 0% 0% / 0.40), 0 2px 4px 0 hsl(0 0% 0% / 0.20);
+
+}
+
+/* ============================================================
+   5. THEME INLINE MAPPINGS
+   ============================================================ */
+
+@theme inline {
+  --color-background:                   var(--background);
+  --color-foreground:                   var(--foreground);
+  --color-card:                         var(--card);
+  --color-card-foreground:              var(--card-foreground);
+  --color-popover:                      var(--popover);
+  --color-popover-foreground:           var(--popover-foreground);
+  --color-primary:                      var(--primary);
+  --color-primary-foreground:           var(--primary-foreground);
+  --color-secondary:                    var(--secondary);
+  --color-secondary-foreground:         var(--secondary-foreground);
+  --color-muted:                        var(--muted);
+  --color-muted-foreground:             var(--muted-foreground);
+  --color-accent:                       var(--accent);
+  --color-accent-foreground:            var(--accent-foreground);
+  --color-destructive:                  var(--destructive);
+  --color-destructive-foreground:       var(--destructive-foreground);
+  --color-border:                       var(--border);
+  --color-input:                        var(--input);
+  --color-ring:                         var(--ring);
+  --color-sidebar:                      var(--sidebar);
+  --color-sidebar-foreground:           var(--sidebar-foreground);
+  --color-sidebar-primary:              var(--sidebar-primary);
+  --color-sidebar-primary-foreground:   var(--sidebar-primary-foreground);
+  --color-sidebar-accent:               var(--sidebar-accent);
+  --color-sidebar-accent-foreground:    var(--sidebar-accent-foreground);
+  --color-sidebar-border:               var(--sidebar-border);
+  --color-sidebar-ring:                 var(--sidebar-ring);
+  --color-chart-1:                      var(--chart-1);
+  --color-chart-2:                      var(--chart-2);
+  --color-chart-3:                      var(--chart-3);
+  --color-chart-4:                      var(--chart-4);
+  --color-chart-5:                      var(--chart-5);
+  --color-chart-6:                      var(--chart-6);
+  --color-chart-7:                      var(--chart-7);
+  --color-chart-8:                      var(--chart-8);
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 2);
+  --font-sans:    var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono:    var(--font-mono);
+}
+
+/* ============================================================
+   6. CUSTOM TAILWIND UTILITIES
+   ============================================================ */
+
+@layer utilities {
+
+  /* Custom font sizes below Tailwind's xs minimum */
+  .text-3xs { font-size: 0.625rem;  line-height: 1rem; } /* 10px — always bold */
+  .text-2xs { font-size: 0.6875rem; line-height: 1rem; } /* 11px */
+
+  /* Icon size utilities */
+  .icon-2xs { width: var(--icon-2xs); height: var(--icon-2xs); }
+  .icon-xs  { width: var(--icon-xs);  height: var(--icon-xs);  }
+  .icon-sm  { width: var(--icon-sm);  height: var(--icon-sm);  }
+  .icon-md  { width: var(--icon-md);  height: var(--icon-md);  }
+  .icon-lg  { width: var(--icon-lg);  height: var(--icon-lg);  }
+  .icon-xl  { width: var(--icon-xl);  height: var(--icon-xl);  }
+  .icon-2xl { width: var(--icon-2xl); height: var(--icon-2xl); }
+
+  /* Avatar size utilities */
+  .avatar-2xs { width: var(--avatar-2xs); height: var(--avatar-2xs); }
+  .avatar-xs  { width: var(--avatar-xs);  height: var(--avatar-xs);  }
+  .avatar-sm  { width: var(--avatar-sm);  height: var(--avatar-sm);  }
+  .avatar-md  { width: var(--avatar-md);  height: var(--avatar-md);  }
+  .avatar-lg  { width: var(--avatar-lg);  height: var(--avatar-lg);  }
+  .avatar-xl  { width: var(--avatar-xl);  height: var(--avatar-xl);  }
+  .avatar-2xl { width: var(--avatar-2xl); height: var(--avatar-2xl); }
+  .avatar-3xl { width: var(--avatar-3xl); height: var(--avatar-3xl); }
+
+  /* Shadow utilities */
+  .shadow-cs-sm { box-shadow: var(--shadow-sm); }
+  .shadow-cs-md { box-shadow: var(--shadow-md); }
+  .shadow-cs-lg { box-shadow: var(--shadow-lg); }
+
+  /* Transition utilities */
+  .transition-fast { transition: all var(--transition-fast); }
+  .transition-base { transition: all var(--transition-base); }
+  .transition-slow { transition: all var(--transition-slow); }
+
+}
+
+/* ============================================================
+   7. BASE STYLES
+   ============================================================ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Headings use --font-heading by default.
+     For themes with a display font that's hard to read at small sizes,
+     override h4-h6 to use --font-body in the theme file. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+
+  /* Links */
+  a {
+    color: var(--link);
+    transition: color var(--transition-fast);
+  }
+  a:hover  { color: var(--link-hover);   }
+  a:visited { color: var(--link-visited); }
+
+  /* Placeholder */
+  ::placeholder {
+    color: var(--placeholder);
+    opacity: 1;
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* text-3xs is always bold */
+  .text-3xs {
+    font-weight: 700;
+  }
+}
