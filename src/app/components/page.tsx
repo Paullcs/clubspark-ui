@@ -27,9 +27,24 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Separator } from "@/components/ui/separator"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { InputGroup, InputGroupText } from "@/components/ui/input-group"
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ColumnDef } from "@tanstack/react-table"
+import { DataTableFixed } from "@/components/ui/data-table-fixed"
+import { DataTableFluid } from "@/components/ui/data-table-fluid"
+import { StickyTableHeader } from "@/components/ui/sticky-table-header"
+import { SortIcon } from "@/components/ui/data-table-core"
+import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-react"
 import {
   AlertCircleIcon, MailIcon, UserIcon, CheckCircleIcon,
-  InfoIcon, AlertTriangleIcon, ClockIcon, CalendarIcon
+  InfoIcon, AlertTriangleIcon, ClockIcon, CalendarIcon,
+  MoreHorizontalIcon, SettingsIcon, LogOutIcon, ChevronDownIcon
 } from "lucide-react"
 
 const Calendar = dynamic(
@@ -59,6 +74,143 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
     </div>
   )
 }
+
+// ─── DataTableFixed demo data ─────────────────────────────────────────────────
+
+type DemoBooking = { id: string; ref: string; customer: string; initials: string; court: string; date: string; time: string; duration: number; status: "Confirmed" | "Pending" | "Cancelled" | "Completed"; amount: number; paid: boolean }
+
+const demoBookings: DemoBooking[] = [
+  { id: "1",  ref: "BK-3E83", customer: "Rob Thomas",      initials: "RT", court: "Court 1 Full", date: "2026-03-28", time: "13:00", duration: 60,  status: "Confirmed",  amount: 12, paid: true  },
+  { id: "2",  ref: "BK-3E84", customer: "Sarah Okafor",    initials: "SO", court: "Court 2 Half", date: "2026-03-28", time: "14:00", duration: 60,  status: "Pending",    amount: 8,  paid: false },
+  { id: "3",  ref: "BK-3E85", customer: "James Whittle",   initials: "JW", court: "Court 1 Full", date: "2026-03-29", time: "09:00", duration: 90,  status: "Confirmed",  amount: 18, paid: true  },
+  { id: "4",  ref: "BK-3E86", customer: "Priya Nair",      initials: "PN", court: "Court 3 Full", date: "2026-03-29", time: "10:00", duration: 60,  status: "Cancelled",  amount: 0,  paid: false },
+  { id: "5",  ref: "BK-3E87", customer: "Marcus Webb",     initials: "MW", court: "Court 2 Full", date: "2026-03-29", time: "11:30", duration: 120, status: "Confirmed",  amount: 24, paid: true  },
+  { id: "6",  ref: "BK-3E88", customer: "Yuki Tanaka",     initials: "YT", court: "Court 1 Half", date: "2026-03-30", time: "08:00", duration: 60,  status: "Completed",  amount: 8,  paid: true  },
+  { id: "7",  ref: "BK-3E89", customer: "Aisha Okonkwo",   initials: "AO", court: "Court 4 Full", date: "2026-03-30", time: "15:00", duration: 60,  status: "Pending",    amount: 12, paid: false },
+  { id: "8",  ref: "BK-3E90", customer: "Dan Sheridan",    initials: "DS", court: "Court 1 Full", date: "2026-03-30", time: "17:00", duration: 90,  status: "Confirmed",  amount: 18, paid: true  },
+  { id: "9",  ref: "BK-3E91", customer: "Fatima Al-Rawi",  initials: "FA", court: "Court 2 Full", date: "2026-03-31", time: "10:00", duration: 60,  status: "Confirmed",  amount: 12, paid: true  },
+  { id: "10", ref: "BK-3E92", customer: "Luke Brennan",    initials: "LB", court: "Court 3 Half", date: "2026-03-31", time: "12:00", duration: 60,  status: "Cancelled",  amount: 0,  paid: false },
+  { id: "11", ref: "BK-3E93", customer: "Chloe Marchetti", initials: "CM", court: "Court 1 Full", date: "2026-04-01", time: "09:00", duration: 60,  status: "Confirmed",  amount: 12, paid: false },
+  { id: "12", ref: "BK-3E94", customer: "Tom Adesanya",    initials: "TA", court: "Court 2 Half", date: "2026-04-01", time: "11:00", duration: 90,  status: "Pending",    amount: 12, paid: false },
+]
+
+const fixedColumns: ColumnDef<DemoBooking>[] = [
+  {
+    id: "select",
+    header: ({ table }) => <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")} onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)} aria-label="Select all" />,
+    cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(v) => row.toggleSelected(!!v)} aria-label="Select row" onClick={(e) => e.stopPropagation()} />,
+    enableSorting: false, enableHiding: false, size: 40,
+  },
+  {
+    accessorKey: "ref",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Ref <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.getValue("ref")}</span>,
+    size: 90,
+  },
+  {
+    accessorKey: "customer",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Customer <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2.5">
+        <Avatar size="xs"><AvatarFallback>{row.original.initials}</AvatarFallback></Avatar>
+        <span className="font-medium text-sm">{row.getValue("customer")}</span>
+      </div>
+    ),
+    size: 180,
+  },
+  {
+    accessorKey: "court",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Court <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => <span className="text-sm">{row.getValue("court")}</span>,
+    size: 130,
+  },
+  {
+    accessorKey: "date",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Date <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => <span className="text-sm">{new Date(row.getValue("date")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>,
+    size: 120,
+  },
+  {
+    accessorKey: "time",
+    header: () => <span className="text-xs font-medium uppercase tracking-wider">Time</span>,
+    cell: ({ row }) => <span className="text-sm tabular-nums">{row.getValue("time")}</span>,
+    size: 70, enableSorting: false,
+  },
+  {
+    accessorKey: "status",
+    header: () => <span className="text-xs font-medium uppercase tracking-wider">Status</span>,
+    cell: ({ row }) => {
+      const s = row.getValue("status") as DemoBooking["status"]
+      const v = { Confirmed: "success", Pending: "pending", Cancelled: "destructive", Completed: "active" } as const
+      return <Badge variant={v[s]}>{s}</Badge>
+    },
+    size: 110,
+  },
+  {
+    accessorKey: "amount",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider ml-auto" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Amount <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => { const a = row.getValue("amount") as number; return <div className="text-right text-sm tabular-nums font-medium">{a === 0 ? <span className="text-muted-foreground">—</span> : `£${a.toFixed(2)}`}</div> },
+    size: 90,
+  },
+  {
+    accessorKey: "paid",
+    header: () => <span className="text-xs font-medium uppercase tracking-wider">Paid</span>,
+    cell: ({ row }) => {
+      if (row.original.status === "Cancelled") return <span className="text-muted-foreground text-sm">—</span>
+      return row.getValue("paid") ? <Badge variant="success-solid">Paid</Badge> : <Badge variant="pending">Unpaid</Badge>
+    },
+    size: 80,
+  },
+]
+
+// ─── DataTableFluid demo data ─────────────────────────────────────────────────
+
+type DemoMember = { id: string; name: string; initials: string; membership: string; joined: string; status: "Active" | "Expired" | "Pending" }
+
+const demoMembers: DemoMember[] = [
+  { id: "1", name: "Rob Thomas",      initials: "RT", membership: "Full Member",   joined: "Jan 2024", status: "Active"  },
+  { id: "2", name: "Sarah Okafor",    initials: "SO", membership: "Junior",        joined: "Mar 2024", status: "Active"  },
+  { id: "3", name: "James Whittle",   initials: "JW", membership: "Full Member",   joined: "Aug 2023", status: "Expired" },
+  { id: "4", name: "Priya Nair",      initials: "PN", membership: "Social",        joined: "Nov 2023", status: "Active"  },
+  { id: "5", name: "Marcus Webb",     initials: "MW", membership: "Full Member",   joined: "Feb 2025", status: "Pending" },
+  { id: "6", name: "Yuki Tanaka",     initials: "YT", membership: "Family",        joined: "Apr 2023", status: "Active"  },
+  { id: "7", name: "Aisha Okonkwo",   initials: "AO", membership: "Junior",        joined: "Sep 2024", status: "Active"  },
+  { id: "8", name: "Dan Sheridan",    initials: "DS", membership: "Full Member",   joined: "Jun 2022", status: "Expired" },
+]
+
+const fluidColumns: ColumnDef<DemoMember>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Member <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2.5">
+        <Avatar size="xs"><AvatarFallback>{row.original.initials}</AvatarFallback></Avatar>
+        <span className="font-medium text-sm">{row.getValue("name")}</span>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "membership",
+    header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Membership <SortIcon direction={column.getIsSorted()} /></button>,
+    cell: ({ row }) => <span className="text-sm">{row.getValue("membership")}</span>,
+  },
+  {
+    accessorKey: "joined",
+    header: () => <span className="text-xs font-medium uppercase tracking-wider">Joined</span>,
+    cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("joined")}</span>,
+    enableSorting: false,
+  },
+  {
+    accessorKey: "status",
+    header: () => <span className="text-xs font-medium uppercase tracking-wider">Status</span>,
+    cell: ({ row }) => {
+      const s = row.getValue("status") as DemoMember["status"]
+      const v = { Active: "success", Expired: "destructive", Pending: "pending" } as const
+      return <Badge variant={v[s]}>{s}</Badge>
+    },
+    enableSorting: false,
+  },
+]
 
 export default function ComponentsPage() {
   const [darkMode, setDarkMode] = useState(false)
@@ -267,6 +419,34 @@ export default function ComponentsPage() {
                     onChange={(e) => setSearchValue(e.target.value)}
                     onClear={() => setSearchValue("")}
                   />
+                </div>
+              </Row>
+            </Section>
+
+            {/* INPUT GROUP */}
+            <Section title="Input Group" description="Inputs with attached prefix or suffix labels.">
+              <Row label="Prefix">
+                <div className="w-full space-y-3 max-w-sm">
+                  <InputGroup>
+                    <InputGroupText>https://</InputGroupText>
+                    <Input placeholder="yourclub.clubspark.co.uk" />
+                  </InputGroup>
+                  <InputGroup>
+                    <InputGroupText>£</InputGroupText>
+                    <Input placeholder="0.00" type="number" />
+                  </InputGroup>
+                </div>
+              </Row>
+              <Row label="Suffix">
+                <div className="w-full space-y-3 max-w-sm">
+                  <InputGroup>
+                    <Input placeholder="Duration" type="number" />
+                    <InputGroupText>mins</InputGroupText>
+                  </InputGroup>
+                  <InputGroup>
+                    <Input placeholder="Capacity" type="number" />
+                    <InputGroupText>players</InputGroupText>
+                  </InputGroup>
                 </div>
               </Row>
             </Section>
@@ -490,6 +670,367 @@ export default function ComponentsPage() {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
+              </Row>
+            </Section>
+
+            {/* BREADCRUMB */}
+            <Section title="Breadcrumb" description="Navigational trail showing the current page location.">
+              <Row label="Default">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="#">Home</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="#">Venues</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>Wimbledon LTC</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </Row>
+              <Row label="Deeper path">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="#">Bookings</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="#">Court 1</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>BK-3E83</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </Row>
+            </Section>
+
+            {/* CARD */}
+            <Section title="Card" description="Surface container for grouped content.">
+              <Row label="Stat cards">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Total bookings</CardTitle>
+                      <CardDescription>Last 30 days</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-foreground">1,284</p>
+                    </CardContent>
+                    <CardFooter>
+                      <p className="text-xs text-muted-foreground">↑ 12% vs previous period</p>
+                    </CardFooter>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Active members</CardTitle>
+                      <CardDescription>Current billing period</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-foreground">342</p>
+                    </CardContent>
+                    <CardFooter>
+                      <p className="text-xs text-muted-foreground">↓ 3 cancelled this week</p>
+                    </CardFooter>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Revenue</CardTitle>
+                      <CardDescription>Month to date</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold text-foreground">£8,420</p>
+                    </CardContent>
+                    <CardFooter>
+                      <p className="text-xs text-muted-foreground">↑ 8% vs last month</p>
+                    </CardFooter>
+                  </Card>
+                </div>
+              </Row>
+              <Row label="With action">
+                <Card className="w-full max-w-sm">
+                  <CardHeader>
+                    <CardTitle>Confirm cancellation</CardTitle>
+                    <CardDescription>
+                      This will cancel booking BK-3E83 and notify the customer.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter className="flex gap-3">
+                    <Button variant="outline" className="flex-1">Keep booking</Button>
+                    <Button variant="destructive" className="flex-1">Cancel booking</Button>
+                  </CardFooter>
+                </Card>
+              </Row>
+            </Section>
+
+            {/* DROPDOWN MENU */}
+            <Section title="Dropdown Menu" description="Contextual action menus anchored to a trigger.">
+              <Row label="Default">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      Actions <ChevronDownIcon className="size-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48">
+                    <DropdownMenuLabel>Booking BK-3E83</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>View details</DropdownMenuItem>
+                    <DropdownMenuItem>Edit booking</DropdownMenuItem>
+                    <DropdownMenuItem>Send confirmation</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      Cancel booking
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="default">
+                      <MoreHorizontalIcon className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-48">
+                    <DropdownMenuLabel>My account</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <UserIcon className="size-4 mr-2" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <SettingsIcon className="size-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <LogOutIcon className="size-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </Row>
+            </Section>
+
+            {/* TABLE */}
+            <Section title="Table" description="Data table for structured records.">
+              <Row label="Default">
+                <Table>
+                  <TableCaption>Recent bookings — Court 1</TableCaption>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ref</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { ref: "BK-3E83", customer: "Rob Thomas", date: "28 Mar 2026", time: "13:00–14:00", status: "Confirmed", amount: "£12.00" },
+                      { ref: "BK-3E84", customer: "Sarah Okafor", date: "28 Mar 2026", time: "14:00–15:00", status: "Pending", amount: "£12.00" },
+                      { ref: "BK-3E85", customer: "James Whittle", date: "29 Mar 2026", time: "09:00–10:00", status: "Confirmed", amount: "£12.00" },
+                      { ref: "BK-3E86", customer: "Priya Nair", date: "29 Mar 2026", time: "10:00–11:00", status: "Cancelled", amount: "£0.00" },
+                    ].map((row) => (
+                      <TableRow key={row.ref}>
+                        <TableCell className="font-mono text-xs">{row.ref}</TableCell>
+                        <TableCell>{row.customer}</TableCell>
+                        <TableCell>{row.date}</TableCell>
+                        <TableCell>{row.time}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              row.status === "Confirmed" ? "success"
+                              : row.status === "Pending" ? "pending"
+                              : "destructive"
+                            }
+                          >
+                            {row.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{row.amount}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Row>
+            </Section>
+
+            {/* DATA TABLE — FIXED */}
+            <Section title="DataTableFixed" description="Fixed column widths, sticky header, sticky columns, horizontal scroll. Use for dense multi-column data.">
+              <Row label="Bookings — sticky header, row actions, bulk actions, export">
+                <div className="w-full">
+                  <DataTableFixed
+                    data={demoBookings}
+                    columns={fixedColumns}
+                    searchColumn="customer"
+                    searchPlaceholder="Search customer…"
+                    stickyHeader
+                    maxHeight="480px"
+                    stickyColumns={{ start: 2, end: 1 }}
+                    resizable
+                    exportable
+                    exportFilename="bookings"
+                    defaultPageSize={8}
+                    onRowClick={(row: DemoBooking) => toast(`Clicked: ${row.ref}`)}
+                    rowActions={[
+                      { label: "View booking",      onClick: (r: DemoBooking) => toast.info(`Viewing ${r.ref}`)              },
+                      { label: "Edit booking",      onClick: (r: DemoBooking) => toast(`Editing ${r.ref}`)                   },
+                      { label: "Cancel booking",    onClick: (r: DemoBooking) => toast.error(`${r.ref} cancelled`), variant: "destructive" },
+                    ]}
+                    bulkActions={[
+                      { label: "Export selected",   variant: "outline",     onClick: (rows) => toast(`Exporting ${rows.length} rows`)       },
+                      { label: "Cancel selected",   variant: "destructive", onClick: (rows) => toast.error(`${rows.length} bookings cancelled`) },
+                    ]}
+                    emptyMessage="No bookings found."
+                  />
+                </div>
+              </Row>
+            </Section>
+
+            {/* DATA TABLE — FLUID */}
+            <Section title="DataTableFluid" description="Fills container width, columns share available space. Use for simple lists and dashboard summaries.">
+              <Row label="Members — simple list, row actions">
+                <div className="w-full">
+                  <StickyTableHeader topOffset="65px">
+                    <DataTableFluid
+                      data={demoMembers}
+                      columns={fluidColumns}
+                      searchColumn="name"
+                      searchPlaceholder="Search member…"
+                      exportable
+                      exportFilename="members"
+                      defaultPageSize={8}
+                      onRowClick={(row: DemoMember) => toast(`Clicked: ${row.name}`)}
+                      rowActions={[
+                        { label: "View profile",      onClick: (r: DemoMember) => toast.info(`Viewing ${r.name}`)             },
+                        { label: "Edit membership",   onClick: (r: DemoMember) => toast(`Editing ${r.name}`)                  },
+                        { label: "Remove member",     onClick: (r: DemoMember) => toast.error(`${r.name} removed`), variant: "destructive" },
+                      ]}
+                      emptyMessage="No members found."
+                    />
+                  </StickyTableHeader>
+                </div>
+              </Row>
+            </Section>
+
+            {/* PAGINATION */}
+            <Section title="Pagination" description="Page navigation for long data sets.">
+              <Row label="Default">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">1</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#" isActive>2</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">3</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink href="#">12</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </Row>
+            </Section>
+
+            {/* COMMAND */}
+            <Section title="Command" description="Keyboard-driven search palette for quick navigation and actions.">
+              <Row label="Inline">
+                <Command className="rounded-lg border border-border shadow-sm w-full max-w-sm">
+                  <CommandInput placeholder="Search bookings, members, courts…" />
+                  <CommandList>
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup heading="Bookings">
+                      <CommandItem>
+                        <CalendarIcon className="size-4 mr-2" />
+                        BK-3E83 — Rob Thomas
+                        <CommandShortcut>⌘B</CommandShortcut>
+                      </CommandItem>
+                      <CommandItem>
+                        <CalendarIcon className="size-4 mr-2" />
+                        BK-3E84 — Sarah Okafor
+                      </CommandItem>
+                    </CommandGroup>
+                    <CommandSeparator />
+                    <CommandGroup heading="Members">
+                      <CommandItem>
+                        <UserIcon className="size-4 mr-2" />
+                        Rob Thomas
+                      </CommandItem>
+                      <CommandItem>
+                        <UserIcon className="size-4 mr-2" />
+                        Sarah Okafor
+                      </CommandItem>
+                    </CommandGroup>
+                    <CommandSeparator />
+                    <CommandGroup heading="Actions">
+                      <CommandItem>
+                        <SettingsIcon className="size-4 mr-2" />
+                        Settings
+                        <CommandShortcut>⌘,</CommandShortcut>
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </Row>
+            </Section>
+
+            {/* NAVIGATION MENU */}
+            <Section title="Navigation Menu" description="Top-level site navigation with dropdown panels.">
+              <Row label="Default">
+                <NavigationMenu>
+                  <NavigationMenuList>
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger>Bookings</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="grid gap-1 p-3 w-48">
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">All bookings</NavigationMenuLink></li>
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Recurring</NavigationMenuLink></li>
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Awaiting approval</NavigationMenuLink></li>
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <NavigationMenuTrigger>Members</NavigationMenuTrigger>
+                      <NavigationMenuContent>
+                        <ul className="grid gap-1 p-3 w-48">
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">All members</NavigationMenuLink></li>
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Memberships</NavigationMenuLink></li>
+                          <li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Renewals</NavigationMenuLink></li>
+                        </ul>
+                      </NavigationMenuContent>
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">
+                        Reports
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </NavigationMenu>
               </Row>
             </Section>
 

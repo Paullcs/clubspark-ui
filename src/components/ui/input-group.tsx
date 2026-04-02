@@ -114,10 +114,13 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function InputGroupInput({
-  className,
-  ...props
-}: React.ComponentProps<"input">) {
+// Omit both 'size' and 'ref' from the native input props to avoid
+// conflicts with shadcn Input's own size and ref types
+type InputGroupInputProps = Omit<React.ComponentProps<"input">, "size" | "ref"> & {
+  ref?: React.Ref<HTMLInputElement>
+}
+
+function InputGroupInput({ className, ...props }: InputGroupInputProps) {
   return (
     <Input
       data-slot="input-group-control"
