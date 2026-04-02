@@ -38,6 +38,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTableFixed } from "@/components/ui/data-table-fixed"
 import { DataTableFluid } from "@/components/ui/data-table-fluid"
+import { DataTableProvider } from "@/components/ui/data-table-provider"
 import { StickyTableHeader } from "@/components/ui/sticky-table-header"
 import { SortIcon } from "@/components/ui/data-table-core"
 import { ArrowUpDownIcon, ArrowUpIcon, ArrowDownIcon } from "lucide-react"
@@ -872,6 +873,7 @@ export default function ComponentsPage() {
             <Section title="DataTableFixed" description="Fixed column widths, sticky header, sticky columns, horizontal scroll. Use for dense multi-column data.">
               <Row label="Bookings — sticky header, row actions, bulk actions, export">
                 <div className="w-full">
+                <DataTableProvider defaults={{ resizable: true, stickyHeader: true, maxHeight: "480px", stickyColumns: { start: 2, end: 1 } }}>
                   <DataTableFixed
                     data={demoBookings}
                     columns={fixedColumns}
@@ -896,6 +898,7 @@ export default function ComponentsPage() {
                     ]}
                     emptyMessage="No bookings found."
                   />
+                </DataTableProvider>
                 </div>
               </Row>
             </Section>
