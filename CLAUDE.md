@@ -49,3 +49,38 @@ navigation-menu, card
 - src/app/globals.css — all design tokens
 - src/app/components/page.tsx — preview page
 - src/components/ui/ — all components
+
+## Lovable / AI Code Generation Rules
+
+### The most important rule
+The theme controls everything. Never hardcode colours, fonts, or spacing values. Always use the token system.
+
+### Colours
+Always use semantic Tailwind utilities. Never hardcode hex, hsl or rgb values.
+
+✅ `bg-background text-foreground`
+✅ `bg-primary text-primary-foreground`
+✅ `text-muted-foreground border-border`
+❌ `bg-[#0026AF]` or `style={{ color: 'hsl(227 100% 34%)' }}`
+
+### Typography
+Headings get `font-weight: 600` and `line-height: 1.25` automatically. Only set the size.
+
+✅ `<h1 className="text-3xl text-foreground">`
+❌ `<h1 className="text-3xl font-semibold leading-tight text-foreground">`
+
+### Components — use existing first
+Always check `@/components/ui/` before building anything new. The completed components list above is what's available.
+
+If a component doesn't exist, you may create one using shadcn primitives and semantic tokens only. Add this comment at the top: `// NEW COMPONENT — not yet in the reviewed library`
+
+### Radius
+Use Tailwind radius utilities — they resolve from the theme token.
+✅ `rounded-lg` ❌ `rounded-[6px]`
+
+### Dark mode
+Never write `dark:` colour variants. If you need to, you're hardcoding a value that should be a token.
+
+### Do not touch
+- `src/app/globals.css` — generated file
+- `tokens/` — generated from `build-tokens.mjs`

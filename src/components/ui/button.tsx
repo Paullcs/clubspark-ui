@@ -5,7 +5,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm whitespace-nowrap transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus-ring disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-[var(--btn-font-weight)] whitespace-nowrap transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-focus-ring disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -72,8 +72,7 @@ const buttonVariants = cva(
         "neutral-outline":
           "border-neutral-btn text-neutral-btn bg-transparent hover:bg-neutral-btn/10",
 
-        /* ── Negative — white button for use on dark surfaces ──
-           Inverts automatically in dark mode via background/foreground tokens */
+        /* ── Negative — white button for use on dark surfaces ── */
         negative:
           "bg-background text-foreground border-border hover:bg-muted",
 
@@ -84,10 +83,10 @@ const buttonVariants = cva(
       },
 
       size: {
-        sm:      "h-8 gap-1.5 px-3 text-xs",         /* 32px */
-        default: "h-10 gap-1.5 px-4 text-sm",         /* 40px */
-        lg:      "h-12 gap-1.5 px-6 text-base",       /* 48px */
-        xl:      "h-14 gap-2 px-8 text-base",         /* 56px */
+        sm:      "h-8 gap-1.5 px-3 text-xs",
+        default: "h-10 gap-1.5 px-4 text-sm",
+        lg:      "h-12 gap-1.5 px-6 text-base",
+        xl:      "h-14 gap-2 px-8 text-base",
         icon:    "size-10",
         "icon-xs": "size-6 rounded-[min(var(--radius-md),10px)]",
         "icon-sm": "size-7 rounded-[min(var(--radius-md),12px)]",

@@ -47,13 +47,31 @@ function DialogOverlay({
   )
 }
 
+// ─── Size scale ───────────────────────────────────────────────────────────────
+// Sizes pull from CSS tokens defined in globals.css so they can be overridden
+// per-brand without touching this file:
+//   --dialog-sm  --dialog-md  --dialog-lg  --dialog-xl  --dialog-top-offset
+//
+// Usage: <DialogContent size="lg"> — defaults to "md" if omitted.
+
+type DialogSize = "sm" | "md" | "lg" | "xl"
+
+const dialogSizeTokens: Record<DialogSize, string> = {
+  sm: "var(--dialog-sm)",
+  md: "var(--dialog-md)",
+  lg: "var(--dialog-lg)",
+  xl: "var(--dialog-xl)",
+}
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  size = "md",
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  size?: DialogSize
 }) {
   return (
     <DialogPortal>
@@ -61,21 +79,49 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // Centred horizontally, anchored to top (not vertically centred)
+          // so the modal stays in a predictable position as content grows.
+          // On mobile: 1rem from top. On desktop: --dialog-top-offset (50px).
+          "fixed top-4 left-1/2 z-50 -translate-x-1/2",
+          "w-full max-w-[calc(100%-2rem)]",
+          // Surface
+          "grid gap-0 rounded-xl bg-popover text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none",
+          // Animation
+          "duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
+        style={{
+          // Apply token-driven max-width and top offset at sm breakpoint and up.
+          // Using CSS custom properties directly so brand overrides in globals.css
+          // are respected without needing to touch this component file.
+          ["--_dialog-max-w" as string]: dialogSizeTokens[size],
+        } as React.CSSProperties}
         {...props}
       >
+        {/*
+          Inner wrapper applies the responsive top offset and max-width.
+          We use a style tag trick: CSS vars set on the element are consumed
+          by a style block so we get responsive behaviour without JS breakpoints.
+        */}
+        <style>{`
+          @media (min-width: 640px) {
+            [data-slot="dialog-content"] {
+              top: var(--dialog-top-offset, 50px);
+              max-width: var(--_dialog-max-w);
+            }
+          }
+        `}</style>
+
         {children}
+
         {showCloseButton && (
           <DialogPrimitive.Close data-slot="dialog-close" asChild>
             <Button
               variant="ghost"
-              className="absolute top-2 right-2"
+              className="absolute top-3 right-3"
               size="icon-sm"
             >
-              <XIcon
-              />
+              <XIcon />
               <span className="sr-only">Close</span>
             </Button>
           </DialogPrimitive.Close>
@@ -89,7 +135,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-2 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6", className)}
       {...props}
     />
   )
@@ -107,7 +153,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 px-4 pb-4 pt-2 sm:flex-row sm:justify-end sm:px-6 sm:pb-6",
         className
       )}
       {...props}
@@ -122,6 +168,8 @@ function DialogFooter({
   )
 }
 
+// text-lg / font-semibold — clearly a heading without competing with
+// page-level h1/h2. One clear step above body text (text-base).
 function DialogTitle({
   className,
   ...props
@@ -129,10 +177,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "font-heading text-base leading-none font-medium",
-        className
-      )}
+      className={cn("font-heading text-lg font-semibold leading-snug", className)}
       {...props}
     />
   )

@@ -1,0 +1,120 @@
+{
+  "$description": "Base tokens — never change per brand. Status colours, shadows, spacing, sizing.",
+
+  "success": {
+    "DEFAULT":    { "$value": "hsl(141 65% 29%)", "$type": "color" },
+    "foreground": { "$value": "hsl(141 40% 97%)", "$type": "color" },
+    "subtle":     { "$value": "hsl(141 40% 92%)", "$type": "color" },
+    "border":     { "$value": "hsl(141 45% 82%)", "$type": "color" },
+    "text":       { "$value": "hsl(141 65% 23%)", "$type": "color" }
+  },
+  "active": {
+    "DEFAULT":    { "$value": "hsl(173 76% 35%)", "$type": "color" },
+    "foreground": { "$value": "hsl(173 46% 97%)", "$type": "color" },
+    "subtle":     { "$value": "hsl(173 46% 92%)", "$type": "color" },
+    "border":     { "$value": "hsl(173 50% 82%)", "$type": "color" },
+    "text":       { "$value": "hsl(173 76% 28%)", "$type": "color" }
+  },
+  "warning": {
+    "DEFAULT":    { "$value": "hsl(22 100% 43%)", "$type": "color" },
+    "foreground": { "$value": "hsl(22 60% 97%)",  "$type": "color" },
+    "subtle":     { "$value": "hsl(22 65% 92%)",  "$type": "color" },
+    "border":     { "$value": "hsl(22 70% 82%)",  "$type": "color" },
+    "text":       { "$value": "hsl(22 100% 35%)", "$type": "color" }
+  },
+  "pending": {
+    "DEFAULT":    { "$value": "hsl(40 100% 60%)", "$type": "color" },
+    "foreground": { "$value": "hsl(40 80% 14%)",  "$type": "color" },
+    "subtle":     { "$value": "hsl(40 100% 92%)", "$type": "color" },
+    "border":     { "$value": "hsl(40 100% 84%)", "$type": "color" },
+    "text":       { "$value": "hsl(40 90% 36%)",  "$type": "color" }
+  },
+  "info": {
+    "DEFAULT":    { "$value": "hsl(221 100% 47%)", "$type": "color" },
+    "foreground": { "$value": "hsl(221 60% 97%)",  "$type": "color" },
+    "subtle":     { "$value": "hsl(221 60% 93%)",  "$type": "color" },
+    "border":     { "$value": "hsl(221 60% 85%)",  "$type": "color" },
+    "text":       { "$value": "hsl(221 100% 38%)", "$type": "color" }
+  },
+  "destructive": {
+    "DEFAULT":    { "$value": "hsl(353 66% 51%)", "$type": "color" },
+    "foreground": { "$value": "hsl(353 40% 97%)", "$type": "color" },
+    "subtle":     { "$value": "hsl(353 45% 92%)", "$type": "color" },
+    "border":     { "$value": "hsl(353 55% 82%)", "$type": "color" },
+    "text":       { "$value": "hsl(353 66% 41%)", "$type": "color" }
+  },
+  "highlight": {
+    "DEFAULT":    { "$value": "hsl(249 86% 64%)", "$type": "color" },
+    "foreground": { "$value": "hsl(249 52% 97%)", "$type": "color" },
+    "subtle":     { "$value": "hsl(249 55% 92%)", "$type": "color" },
+    "border":     { "$value": "hsl(249 60% 84%)", "$type": "color" },
+    "text":       { "$value": "hsl(249 86% 52%)", "$type": "color" }
+  },
+
+  "neutral-btn": {
+    "DEFAULT":    { "$value": "hsl(0 0% 0%)",   "$type": "color" },
+    "foreground": { "$value": "hsl(0 0% 100%)", "$type": "color" }
+  },
+
+  "font-mono":       { "$value": "ui-monospace, monospace", "$type": "fontFamily" },
+  "btn-font-weight": { "$value": "600",                     "$type": "fontWeight"  },
+
+  "focus-ring-offset": { "$value": "2px", "$type": "dimension" },
+  "focus-ring-width":  { "$value": "2px", "$type": "dimension" },
+
+  "shadow-sm": { "$value": "0 1px 2px 0 hsl(224 28% 21% / 0.05)", "$type": "shadow" },
+  "shadow-md": { "$value": "0 2px 8px 0 hsl(224 28% 21% / 0.08), 0 1px 2px 0 hsl(224 28% 21% / 0.04)", "$type": "shadow" },
+  "shadow-lg": { "$value": "0 4px 16px 0 hsl(224 28% 21% / 0.10), 0 2px 4px 0 hsl(224 28% 21% / 0.04)", "$type": "shadow" },
+
+  "transition-fast": { "$value": "150ms ease", "$type": "duration" },
+  "transition-base": { "$value": "200ms ease", "$type": "duration" },
+  "transition-slow": { "$value": "300ms ease", "$type": "duration" },
+
+  "z-base":     { "$value": "0",   "$type": "number" },
+  "z-raised":   { "$value": "10",  "$type": "number" },
+  "z-sticky":   { "$value": "100", "$type": "number" },
+  "z-dropdown": { "$value": "200", "$type": "number" },
+  "z-overlay":  { "$value": "300", "$type": "number" },
+  "z-modal":    { "$value": "400", "$type": "number" },
+  "z-toast":    { "$value": "500", "$type": "number" },
+
+  "spacing-xs":  { "$value": "0.25rem", "$type": "dimension" },
+  "spacing-sm":  { "$value": "0.5rem",  "$type": "dimension" },
+  "spacing-md":  { "$value": "0.75rem", "$type": "dimension" },
+  "spacing-lg":  { "$value": "1rem",    "$type": "dimension" },
+  "spacing-xl":  { "$value": "1.5rem",  "$type": "dimension" },
+  "spacing-2xl": { "$value": "2rem",    "$type": "dimension" },
+  "spacing-3xl": { "$value": "3rem",    "$type": "dimension" },
+
+  "avatar-2xs": { "$value": "1.5rem",  "$type": "dimension" },
+  "avatar-xs":  { "$value": "1.75rem", "$type": "dimension" },
+  "avatar-sm":  { "$value": "2rem",    "$type": "dimension" },
+  "avatar-md":  { "$value": "2.5rem",  "$type": "dimension" },
+  "avatar-lg":  { "$value": "3rem",    "$type": "dimension" },
+  "avatar-xl":  { "$value": "4rem",    "$type": "dimension" },
+  "avatar-2xl": { "$value": "5rem",    "$type": "dimension" },
+  "avatar-3xl": { "$value": "6rem",    "$type": "dimension" },
+
+  "icon-2xs": { "$value": "0.5rem",  "$type": "dimension" },
+  "icon-xs":  { "$value": "0.75rem", "$type": "dimension" },
+  "icon-sm":  { "$value": "1rem",    "$type": "dimension" },
+  "icon-md":  { "$value": "1.25rem", "$type": "dimension" },
+  "icon-lg":  { "$value": "1.5rem",  "$type": "dimension" },
+  "icon-xl":  { "$value": "2rem",    "$type": "dimension" },
+  "icon-2xl": { "$value": "3rem",    "$type": "dimension" },
+
+  "dialog-sm":         { "$value": "24rem", "$type": "dimension" },
+  "dialog-md":         { "$value": "28rem", "$type": "dimension" },
+  "dialog-lg":         { "$value": "32rem", "$type": "dimension" },
+  "dialog-xl":         { "$value": "40rem", "$type": "dimension" },
+  "dialog-top-offset": { "$value": "50px",  "$type": "dimension" },
+
+  "chart-1": { "$value": "hsl(227 100% 34%)", "$type": "color" },
+  "chart-2": { "$value": "hsl(221 83% 53%)",  "$type": "color" },
+  "chart-3": { "$value": "hsl(142 71% 45%)",  "$type": "color" },
+  "chart-4": { "$value": "hsl(353 75% 55%)",  "$type": "color" },
+  "chart-5": { "$value": "hsl(35 95% 55%)",   "$type": "color" },
+  "chart-6": { "$value": "hsl(280 65% 60%)",  "$type": "color" },
+  "chart-7": { "$value": "hsl(173 70% 42%)",  "$type": "color" },
+  "chart-8": { "$value": "hsl(15 90% 55%)",   "$type": "color" }
+}

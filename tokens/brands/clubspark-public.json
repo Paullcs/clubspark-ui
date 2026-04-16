@@ -1,0 +1,279 @@
+{
+  "$description": "Clubspark Public \u2014 brand colours, fonts and public scale. Used by: Clubspark public pages.",
+  "$theme": "theme-clubspark-public",
+  "primary-50": {
+    "$value": "hsl(227 60% 97%)",
+    "$type": "color",
+    "$description": "Brand primary: #0026AF"
+  },
+  "primary-100": {
+    "$value": "hsl(227 60% 93%)",
+    "$type": "color"
+  },
+  "primary-200": {
+    "$value": "hsl(227 60% 85%)",
+    "$type": "color"
+  },
+  "primary-300": {
+    "$value": "hsl(227 70% 73%)",
+    "$type": "color"
+  },
+  "primary-400": {
+    "$value": "hsl(227 80% 62%)",
+    "$type": "color"
+  },
+  "primary-500": {
+    "$value": "hsl(227 100% 34%)",
+    "$type": "color"
+  },
+  "primary-600": {
+    "$value": "hsl(227 100% 28%)",
+    "$type": "color"
+  },
+  "primary-700": {
+    "$value": "hsl(227 100% 22%)",
+    "$type": "color"
+  },
+  "primary-800": {
+    "$value": "hsl(227 100% 16%)",
+    "$type": "color"
+  },
+  "primary-900": {
+    "$value": "hsl(227 100% 10%)",
+    "$type": "color"
+  },
+  "accent-50": {
+    "$value": "hsl(151 60% 97%)",
+    "$type": "color",
+    "$description": "Brand accent: #02E075"
+  },
+  "accent-100": {
+    "$value": "hsl(151 60% 92%)",
+    "$type": "color"
+  },
+  "accent-200": {
+    "$value": "hsl(151 65% 82%)",
+    "$type": "color"
+  },
+  "accent-300": {
+    "$value": "hsl(151 75% 68%)",
+    "$type": "color"
+  },
+  "accent-400": {
+    "$value": "hsl(151 90% 55%)",
+    "$type": "color"
+  },
+  "accent-500": {
+    "$value": "hsl(151 98% 44%)",
+    "$type": "color"
+  },
+  "accent-600": {
+    "$value": "hsl(151 98% 35%)",
+    "$type": "color"
+  },
+  "accent-700": {
+    "$value": "hsl(151 90% 26%)",
+    "$type": "color"
+  },
+  "accent-800": {
+    "$value": "hsl(151 85% 18%)",
+    "$type": "color"
+  },
+  "accent-900": {
+    "$value": "hsl(151 80% 11%)",
+    "$type": "color"
+  },
+  "neutral-50": {
+    "$value": "hsl(224 17% 97%)",
+    "$type": "color"
+  },
+  "neutral-100": {
+    "$value": "hsl(224 17% 93%)",
+    "$type": "color"
+  },
+  "neutral-200": {
+    "$value": "hsl(224 20% 85%)",
+    "$type": "color"
+  },
+  "neutral-300": {
+    "$value": "hsl(224 22% 73%)",
+    "$type": "color"
+  },
+  "neutral-400": {
+    "$value": "hsl(224 24% 58%)",
+    "$type": "color"
+  },
+  "neutral-500": {
+    "$value": "hsl(224 26% 44%)",
+    "$type": "color"
+  },
+  "neutral-600": {
+    "$value": "hsl(224 27% 34%)",
+    "$type": "color"
+  },
+  "neutral-700": {
+    "$value": "hsl(224 28% 27%)",
+    "$type": "color"
+  },
+  "neutral-800": {
+    "$value": "hsl(224 28% 21%)",
+    "$type": "color"
+  },
+  "neutral-900": {
+    "$value": "hsl(224 28% 14%)",
+    "$type": "color"
+  },
+  "font-body": {
+    "$value": "'DM Sans', system-ui, sans-serif",
+    "$type": "fontFamily"
+  },
+  "font-heading": {
+    "$value": "'DM Sans', system-ui, sans-serif",
+    "$type": "fontFamily"
+  },
+  "background": {
+    "$value": "hsl(0 0% 100%)",
+    "$type": "color"
+  },
+  "foreground": {
+    "$value": "hsl(224 28% 21%)",
+    "$type": "color"
+  },
+  "card": {
+    "$value": "hsl(0 0% 100%)",
+    "$type": "color"
+  },
+  "card-foreground": {
+    "$value": "hsl(224 28% 21%)",
+    "$type": "color"
+  },
+  "popover": {
+    "$value": "hsl(0 0% 100%)",
+    "$type": "color"
+  },
+  "popover-foreground": {
+    "$value": "hsl(224 28% 21%)",
+    "$type": "color"
+  },
+  "primary": {
+    "$value": "hsl(227 100% 34%)",
+    "$type": "color"
+  },
+  "primary-foreground": {
+    "$value": "hsl(227 60% 97%)",
+    "$type": "color"
+  },
+  "secondary": {
+    "$value": "hsl(227 60% 93%)",
+    "$type": "color"
+  },
+  "secondary-foreground": {
+    "$value": "hsl(227 100% 34%)",
+    "$type": "color"
+  },
+  "muted": {
+    "$value": "hsl(224 17% 93%)",
+    "$type": "color"
+  },
+  "muted-foreground": {
+    "$value": "hsl(224 26% 44%)",
+    "$type": "color"
+  },
+  "accent": {
+    "$value": "hsl(224 17% 93%)",
+    "$type": "color"
+  },
+  "accent-foreground": {
+    "$value": "hsl(224 28% 21%)",
+    "$type": "color"
+  },
+  "border": {
+    "$value": "hsl(224 20% 85%)",
+    "$type": "color"
+  },
+  "input": {
+    "$value": "hsl(224 20% 85%)",
+    "$type": "color"
+  },
+  "ring": {
+    "$value": "hsl(227 100% 34%)",
+    "$type": "color"
+  },
+  "link": {
+    "$value": "hsl(227 100% 28%)",
+    "$type": "color"
+  },
+  "link-hover": {
+    "$value": "hsl(227 100% 22%)",
+    "$type": "color"
+  },
+  "link-visited": {
+    "$value": "hsl(249 86% 52%)",
+    "$type": "color"
+  },
+  "focus-ring": {
+    "$value": "hsl(227 100% 34%)",
+    "$type": "color"
+  },
+  "disabled-bg": {
+    "$value": "hsl(224 17% 93%)",
+    "$type": "color"
+  },
+  "disabled-text": {
+    "$value": "hsl(224 24% 58%)",
+    "$type": "color"
+  },
+  "disabled-border": {
+    "$value": "hsl(224 20% 85%)",
+    "$type": "color"
+  },
+  "placeholder": {
+    "$value": "hsl(224 24% 58%)",
+    "$type": "color"
+  },
+  "radius": {
+    "$value": "0.625rem",
+    "$type": "dimension",
+    "$description": "10px \u2014 rounder, consumer feel"
+  },
+  "height-sm": {
+    "$value": "2.25rem",
+    "$type": "dimension"
+  },
+  "height-md": {
+    "$value": "2.75rem",
+    "$type": "dimension"
+  },
+  "height-lg": {
+    "$value": "3.25rem",
+    "$type": "dimension"
+  },
+  "height-xl": {
+    "$value": "4rem",
+    "$type": "dimension"
+  },
+  "padding-sm": {
+    "$value": "0 1rem",
+    "$type": "spacing"
+  },
+  "padding-md": {
+    "$value": "0 1.25rem",
+    "$type": "spacing"
+  },
+  "padding-lg": {
+    "$value": "0 1.75rem",
+    "$type": "spacing"
+  },
+  "padding-xl": {
+    "$value": "0 2.25rem",
+    "$type": "spacing"
+  },
+  "accent-btn-foreground": {
+    "$value": "hsl(151 80% 11%)",
+    "$type": "color"
+  },
+  "accent-btn": {
+    "$value": "hsl(151 98% 44%)",
+    "$type": "color"
+  }
+}

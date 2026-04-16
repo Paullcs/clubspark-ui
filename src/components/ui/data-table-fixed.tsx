@@ -2,18 +2,6 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DataTableFixed
-//
-// Use when:
-//   - You have many columns
-//   - You need sticky (pinned) columns
-//   - You want predictable column widths that never shrink
-//   - Content should truncate rather than wrap
-//   - You need column resizing
-//
-// Columns should have explicit `size` values defined.
-// The table scrolls horizontally when content exceeds the container width.
-// Sticky columns use TanStack's column pinning API (column.getStart / getAfter).
-// Column reordering uses @dnd-kit — drag headers left/right to reorder.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import * as React from "react"
@@ -96,8 +84,8 @@ import { useDataTableDefaults } from "@/components/ui/data-table-provider"
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type StickyColumns = {
-  start?: number  // pin N columns on the left
-  end?: number    // pin N columns on the right
+  start?: number
+  end?: number
 }
 
 export type DataTableFixedProps<TData> = {
@@ -127,36 +115,27 @@ export type DataTableFixedProps<TData> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Returns sticky positioning styles for pinned columns using TanStack's API.
-// column.getStart() / column.getAfter() calculate the correct pixel offsets.
 function getPinnedStyles<TData>(column: Column<TData>): React.CSSProperties {
   const isPinned = column.getIsPinned()
   if (!isPinned) return {}
   return {
     position: "sticky",
-    left:  isPinned === "left"  ? `${column.getStart("left")}px`  : undefined,
-    right: isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
-    zIndex: "var(--z-sticky)",
+    left:   isPinned === "left"  ? `${column.getStart("left")}px`  : undefined,
+    right:  isPinned === "right" ? `${column.getAfter("right")}px` : undefined,
+    zIndex: "calc(var(--z-sticky) + 1)",
   }
 }
 
-// Extracts a column's ID from its definition (accessorKey takes priority over id)
 function getColumnId(col: ColumnDef<any, any>): string {
   return (col as any).accessorKey ?? (col as any).id ?? ""
 }
 
-// These columns are never draggable — they always stay in position
 const FIXED_COLUMN_IDS = new Set(["select", "__actions"])
 
+// Width of the non-TanStack expand-button column (Tailwind w-10 = 2.5rem = 40px)
+const EXPAND_COL_WIDTH = 40
+
 // ─── DraggableTableHead ───────────────────────────────────────────────────────
-//
-// Interaction model (matches HubSpot/Notion pattern):
-//   - Hover the cell   → subtle bg highlight shows column boundary
-//   - Drag the cell    → reorders the column (8px movement threshold)
-//   - Click the cell   → sort (click registers before drag threshold)
-//   - Drag right edge  → resizes the column width
-//
-// No grip icon — the whole header is the drag target.
 
 function DraggableTableHead<TData>({
   header,
@@ -186,8 +165,6 @@ function DraggableTableHead<TData>({
   return (
     <TableHead
       ref={setNodeRef}
-      // suppressHydrationWarning — dnd-kit generates unique aria-describedby IDs
-      // on the client that differ from the server render. Intentional for dnd-kit in Next.js.
       suppressHydrationWarning
       className={cn(
         className,
@@ -197,20 +174,15 @@ function DraggableTableHead<TData>({
       )}
       style={{
         ...style,
-        transform:  CSS.Transform.toString(transform),
+        transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
         transition,
-        cursor: canDrag
-          ? isDragging ? "grabbing" : "grab"
-          : undefined,
+        cursor: canDrag ? (isDragging ? "grabbing" : "grab") : undefined,
       }}
       {...(canDrag ? { ...attributes, ...listeners } : {})}
     >
-      {/* Column content */}
       <div className="flex items-center gap-1.5 pr-1">
         {children}
       </div>
-
-      {/* Right edge — resizes this column, visible on cell hover or when resizing */}
       {resizable && header.column.getCanResize() && (
         <div
           onMouseDown={(e) => { e.stopPropagation(); header.getResizeHandler()(e) }}
@@ -255,7 +227,6 @@ export function DataTableFixed<TData>({
   emptyMessage   = "No results found.",
 }: DataTableFixedProps<TData>) {
 
-  // Resolve config — props take priority over provider defaults
   const config = useDataTableDefaults({
     stickyHeader, stickyColumns, maxHeight, resizable,
     defaultPageSize, pageSizeOptions, exportable, exportFilename,
@@ -275,7 +246,6 @@ export function DataTableFixed<TData>({
 
   // ── Column definitions ──────────────────────────────────────────────────────
 
-  // Append row actions column when rowActions are provided
   const columns = React.useMemo<ColumnDef<TData, any>[]>(() => {
     if (!rowActions?.length) return userColumns
     return [
@@ -309,20 +279,20 @@ export function DataTableFixed<TData>({
         enableSorting:  false,
         enableHiding:   false,
         enableResizing: false,
-        size: 48,
+        size: 64,
       },
     ]
   }, [userColumns, rowActions])
 
-  // ── Derived state (no side effects) ────────────────────────────────────────
+  // ── Column order ────────────────────────────────────────────────────────────
 
-  // Column order — initialised once from column definitions
   const [columnOrder, setColumnOrder] = React.useState<ColumnOrderState>(
     () => columns.map(getColumnId).filter(Boolean)
   )
 
-  // Column pinning — derived directly from stickyColumns prop, no useEffect needed
-  const columnPinning = React.useMemo<ColumnPinningState>(() => {
+  // ── Column pinning ──────────────────────────────────────────────────────────
+
+  const initialPinning = React.useMemo<ColumnPinningState>(() => {
     if (!resolvedStickyColumns) return {}
     const ids   = columns.map(getColumnId).filter(Boolean)
     const left  = resolvedStickyColumns.start ? ids.slice(0, resolvedStickyColumns.start) : []
@@ -330,7 +300,9 @@ export function DataTableFixed<TData>({
     return { left, right }
   }, [columns, resolvedStickyColumns])
 
-  // ── TanStack table instance ─────────────────────────────────────────────────
+  const [columnPinning, setColumnPinning] = React.useState<ColumnPinningState>(initialPinning)
+
+  // ── TanStack table ──────────────────────────────────────────────────────────
 
   const [sorting, setSorting]                   = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters]       = React.useState<ColumnFiltersState>([])
@@ -341,25 +313,18 @@ export function DataTableFixed<TData>({
   const [density, setDensity]                   = React.useState<DensityOption>("default")
   const [columnResizeMode]                       = React.useState<ColumnResizeMode>("onChange")
 
-  const table = useReactTable({
+  const tableInstance = useReactTable({
     data,
     columns,
     columnResizeMode: resolvedResizable ? columnResizeMode : undefined,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      columnPinning,   // derived from props — read-only, no setter needed
-      columnOrder,
-      rowSelection,
-      expanded,
-    },
+    state: { sorting, columnFilters, columnVisibility, columnPinning, columnOrder, rowSelection, expanded },
     enableRowSelection: true,
     enableMultiSort:    true,
     onRowSelectionChange:     setRowSelection,
     onSortingChange:          setSorting,
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnPinningChange:    setColumnPinning,
     onColumnOrderChange:      setColumnOrder,
     onExpandedChange:         setExpanded,
     getCoreRowModel:       getCoreRowModel(),
@@ -379,11 +344,10 @@ export function DataTableFixed<TData>({
     },
   })
 
-  React.useEffect(() => { table.setPageSize(pageSize) }, [pageSize, table])
+  React.useEffect(() => { tableInstance.setPageSize(pageSize) }, [pageSize, tableInstance])
 
   // ── dnd-kit ─────────────────────────────────────────────────────────────────
 
-  // Distance constraint: 8px move activates drag so clicks still register
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
@@ -400,11 +364,18 @@ export function DataTableFixed<TData>({
   }
 
   // ── Derived render values ───────────────────────────────────────────────────
-  const selectedRows  = table.getFilteredSelectedRowModel().rows
+
+  const selectedRows  = tableInstance.getFilteredSelectedRowModel().rows
   const selectedCount = selectedRows.length
-  const totalCount    = table.getFilteredRowModel().rows.length
-  const allCols       = table.getVisibleLeafColumns()
-  const headerIds     = table.getHeaderGroups()[0]?.headers.map((h) => h.id) ?? []
+  const totalCount    = tableInstance.getFilteredRowModel().rows.length
+  const allCols       = tableInstance.getVisibleLeafColumns()
+  const headerIds     = tableInstance.getHeaderGroups()[0]?.headers.map((h) => h.id) ?? []
+
+  const hasLeftPin  = !!columnPinning.left?.length
+  const hasRightPin = !!columnPinning.right?.length
+
+  const leftShadowOffset  = tableInstance.getLeftTotalSize()  + (expandedContent ? EXPAND_COL_WIDTH : 0)
+  const rightShadowOffset = tableInstance.getRightTotalSize()
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -417,8 +388,8 @@ export function DataTableFixed<TData>({
           {searchColumn && (
             <Input
               placeholder={searchPlaceholder}
-              value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-              onChange={(e) => table.getColumn(searchColumn)?.setFilterValue(e.target.value)}
+              value={(tableInstance.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
+              onChange={(e) => tableInstance.getColumn(searchColumn)?.setFilterValue(e.target.value)}
               size="sm"
               className="w-52"
             />
@@ -432,7 +403,7 @@ export function DataTableFixed<TData>({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => exportToCsv(table.getFilteredRowModel().rows, userColumns, resolvedExportFile)}
+              onClick={() => exportToCsv(tableInstance.getFilteredRowModel().rows, userColumns, resolvedExportFile)}
             >
               <DownloadIcon className="size-4 mr-1.5" />
               Export
@@ -448,7 +419,7 @@ export function DataTableFixed<TData>({
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {table.getAllColumns().filter((c) => c.getCanHide()).map((col) => (
+              {tableInstance.getAllColumns().filter((c) => c.getCanHide()).map((col) => (
                 <DropdownMenuCheckboxItem
                   key={col.id}
                   className="capitalize"
@@ -469,45 +440,50 @@ export function DataTableFixed<TData>({
           selectedCount={selectedCount}
           selectedRows={selectedRows.map((r) => r.original)}
           actions={bulkActions}
-          onClear={() => table.resetRowSelection()}
+          onClear={() => tableInstance.resetRowSelection()}
         />
       )}
 
-      {/* Table
-          Uses a raw <table> tag rather than shadcn's <Table> wrapper.
-          Shadcn's Table adds overflow-x-auto internally which breaks
-          position:sticky on header cells. We control overflow here instead. */}
-      {/* Table — pure CSS scroll shadows using background-attachment: local/scroll technique.
-          The white covers hide the gradient when scrolled to the edge.
-          The dark radial gradients create the shadow effect. */}
-      <div className="rounded-lg border border-border">
+      <div className="rounded-lg border border-border relative">
+
+        {hasLeftPin && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 bottom-0 w-4"
+            style={{
+              left: leftShadowOffset,
+              zIndex: 1,
+              background: "linear-gradient(to right, rgba(0,0,0,0.15), transparent)",
+            }}
+          />
+        )}
+
+        {hasRightPin && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 bottom-0 w-4"
+            style={{
+              right: rightShadowOffset,
+              zIndex: 1,
+              background: "linear-gradient(to right, transparent, rgba(0,0,0,0.15))",
+            }}
+          />
+        )}
+
         <div
           className={cn("overflow-x-auto", resolvedMaxHeight && "overflow-y-auto")}
-          style={{
-            ...(resolvedMaxHeight ? { maxHeight: resolvedMaxHeight } : {}),
-            background: `
-              linear-gradient(to right, var(--color-card) 20%, transparent) left center / 40px 100%,
-              linear-gradient(to left,  var(--color-card) 20%, transparent) right center / 40px 100%,
-              radial-gradient(farthest-side at 0 50%, hsl(var(--foreground) / 0.1), transparent) left center / 12px 100%,
-              radial-gradient(farthest-side at 100% 50%, hsl(var(--foreground) / 0.1), transparent) right center / 12px 100%
-            `,
-            backgroundRepeat: "no-repeat",
-            backgroundAttachment: "local, local, scroll, scroll",
-          }}
+          style={resolvedMaxHeight ? { maxHeight: resolvedMaxHeight } : undefined}
         >
-          {/* DndContext wraps the table element, not thead — dnd-kit renders
-              an accessibility announcer <div> which would be invalid inside thead */}
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <table
               className="w-full caption-bottom text-sm"
-              style={{ tableLayout: "fixed", width: "100%", minWidth: table.getTotalSize() }}
+              style={{ tableLayout: "fixed", width: "100%", minWidth: tableInstance.getTotalSize() }}
             >
               <TableHeader>
-                {table.getHeaderGroups().map((hg) => (
+                {tableInstance.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id} className="bg-table-header-bg hover:bg-table-header-bg">
                     <SortableContext items={headerIds} strategy={horizontalListSortingStrategy}>
 
-                      {/* Expand toggle column — not draggable */}
                       {expandedContent && (
                         <TableHead
                           className={cn("w-10", resolvedStickyHeader && "sticky")}
@@ -568,8 +544,8 @@ export function DataTableFixed<TData>({
                       ))}
                     </TableRow>
                   ))
-                ) : table.getRowModel().rows.length ? (
-                  table.getRowModel().rows.map((row) => (
+                ) : tableInstance.getRowModel().rows.length ? (
+                  tableInstance.getRowModel().rows.map((row) => (
                     <React.Fragment key={row.id}>
                       <TableRow
                         data-state={row.getIsSelected() && "selected"}
@@ -604,8 +580,8 @@ export function DataTableFixed<TData>({
                                 "truncate relative",
                                 densityConfig[density].cell,
                                 isPinned && (row.getIsSelected()
-                                ? "bg-table-row-selected"
-                                : "bg-card group-hover:bg-table-row-hover"),
+                                  ? "bg-table-row-selected"
+                                  : "bg-table-row-bg group-hover:bg-table-row-hover"),
                               )}
                               style={{
                                 ...getPinnedStyles(cell.column),
@@ -646,17 +622,17 @@ export function DataTableFixed<TData>({
 
       {/* Pagination */}
       <PaginationBar
-        pageIndex={table.getState().pagination.pageIndex}
-        pageCount={table.getPageCount()}
+        pageIndex={tableInstance.getState().pagination.pageIndex}
+        pageCount={tableInstance.getPageCount()}
         totalCount={totalCount}
         pageSize={pageSize}
         pageSizeOptions={resolvedPageSizeOpts}
-        canPrevious={table.getCanPreviousPage()}
-        canNext={table.getCanNextPage()}
-        onFirst={() => table.setPageIndex(0)}
-        onPrevious={() => table.previousPage()}
-        onNext={() => table.nextPage()}
-        onLast={() => table.setPageIndex(table.getPageCount() - 1)}
+        canPrevious={tableInstance.getCanPreviousPage()}
+        canNext={tableInstance.getCanNextPage()}
+        onFirst={() => tableInstance.setPageIndex(0)}
+        onPrevious={() => tableInstance.previousPage()}
+        onNext={() => tableInstance.nextPage()}
+        onLast={() => tableInstance.setPageIndex(tableInstance.getPageCount() - 1)}
         onPageSizeChange={(n) => setPageSize(n)}
       />
 
