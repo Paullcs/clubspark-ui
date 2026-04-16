@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const textareaVariants = cva(
-  "w-full min-w-0 rounded-lg border border-input bg-background text-foreground transition-colors outline-none placeholder:text-placeholder focus-visible:border-focus-ring focus-visible:ring-2 focus-visible:ring-focus-ring/20 disabled:pointer-events-none disabled:bg-disabled-bg disabled:text-disabled-text disabled:border-disabled-border aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 resize-y",
+  "w-full min-w-0 rounded-lg border border-input bg-background text-foreground transition-colors outline-none placeholder:text-placeholder focus-visible:border-focus-ring focus-visible:ring-2 focus-visible:ring-focus-ring/20 disabled:pointer-events-none disabled:bg-disabled-bg disabled:text-disabled-text disabled:border-disabled-border aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20 resize-none overflow-hidden",
   {
     variants: {
       size: {
@@ -22,12 +22,36 @@ const textareaVariants = cva(
 function Textarea({
   className,
   size = "default",
+  onChange,
   ...props
 }: React.ComponentProps<"textarea"> & VariantProps<typeof textareaVariants>) {
+  const ref = React.useRef<HTMLTextAreaElement>(null)
+
+  const autoResize = React.useCallback(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = "auto"
+    el.style.height = `${el.scrollHeight}px`
+  }, [])
+
+  React.useEffect(() => {
+    autoResize()
+  }, [props.value, autoResize])
+
+  const handleChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      autoResize()
+      onChange?.(e)
+    },
+    [autoResize, onChange]
+  )
+
   return (
     <textarea
+      ref={ref}
       data-slot="textarea"
       className={cn(textareaVariants({ size }), className)}
+      onChange={handleChange}
       {...props}
     />
   )

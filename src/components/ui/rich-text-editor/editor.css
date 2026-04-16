@@ -1,0 +1,69 @@
+/* Rich Text Editor — scoped display styles */
+
+/* Hide toolbar scrollbar visually */
+.cs-toolbar { scrollbar-width: none; }
+.cs-toolbar::-webkit-scrollbar { display: none; }
+
+.cs-editor {
+  outline: none;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--foreground);
+}
+
+/* Headings — use existing token scale, no duplication */
+.cs-editor h1 { font-size: var(--text-3xl); font-weight: 600; line-height: 1.25; margin-bottom: 0.5rem; }
+.cs-editor h2 { font-size: var(--text-2xl); font-weight: 600; line-height: 1.25; margin-bottom: 0.5rem; }
+.cs-editor h3 { font-size: var(--text-xl);  font-weight: 600; line-height: 1.25; margin-bottom: 0.5rem; }
+
+/* Paragraphs */
+.cs-editor p { margin-bottom: 0.5rem; }
+.cs-editor p:last-child { margin-bottom: 0; }
+
+/* Lists */
+.cs-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+.cs-editor ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+.cs-editor li { margin-bottom: 0.25rem; }
+.cs-editor li p { margin-bottom: 0; }
+
+/* Inline */
+.cs-editor strong { font-weight: 600; }
+.cs-editor em { font-style: italic; }
+.cs-editor u { text-decoration: underline; }
+.cs-editor s { text-decoration: line-through; }
+.cs-editor code { font-family: var(--font-mono); font-size: 0.875em; background: var(--muted); padding: 0.125rem 0.25rem; border-radius: 0.25rem; }
+
+/* Blockquote */
+.cs-editor blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--muted-foreground); margin-bottom: 0.5rem; }
+
+/* Code block */
+.cs-editor pre { background: var(--muted); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 0.5rem; }
+.cs-editor pre code { background: none; padding: 0; }
+
+/* Horizontal rule */
+.cs-editor hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+/* Links */
+.cs-editor a { color: var(--link); text-decoration: underline; }
+.cs-editor a:hover { opacity: 0.8; }
+
+/* Tables */
+.cs-editor table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
+.cs-editor td, .cs-editor th { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+.cs-editor th { background: var(--muted); font-weight: 600; }
+
+/* Images */
+.cs-editor img { max-width: 100%; height: auto; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+
+/* YouTube embeds */
+.cs-youtube { width: 100%; aspect-ratio: 16/9; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+
+/* Placeholder */
+.cs-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

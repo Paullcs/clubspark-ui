@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils"
 
 function Checkbox({
   className,
+  variant = "default",
   ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
+}: React.ComponentProps<typeof CheckboxPrimitive.Root> & {
+  variant?: "default" | "info"
+}) {
   return (
     <CheckboxPrimitive.Root
       data-slot="checkbox"
@@ -15,16 +18,22 @@ function Checkbox({
         "peer size-4 shrink-0 rounded-[4px] border border-input bg-background transition-colors outline-none",
         // Focus
         "focus-visible:border-focus-ring focus-visible:ring-2 focus-visible:ring-focus-ring/20",
-        // Checked
-        "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
-        // Indeterminate
-        "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
         // Disabled
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-disabled-bg disabled:border-disabled-border",
-        // Disabled checked
-        "disabled:data-[state=checked]:bg-disabled-bg disabled:data-[state=checked]:border-disabled-border disabled:data-[state=checked]:text-disabled-text",
-        // Disabled indeterminate
-        "disabled:data-[state=indeterminate]:bg-disabled-bg disabled:data-[state=indeterminate]:border-disabled-border disabled:data-[state=indeterminate]:text-disabled-text",
+        // Default variant — primary colour
+        variant === "default" && [
+          "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
+          "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:text-primary-foreground",
+          "disabled:data-[state=checked]:bg-disabled-bg disabled:data-[state=checked]:border-disabled-border disabled:data-[state=checked]:text-disabled-text",
+          "disabled:data-[state=indeterminate]:bg-disabled-bg disabled:data-[state=indeterminate]:border-disabled-border disabled:data-[state=indeterminate]:text-disabled-text",
+        ],
+        // Info variant — for table row selection
+        variant === "info" && [
+          "data-[state=checked]:bg-[var(--info)] data-[state=checked]:border-[var(--info)] data-[state=checked]:text-[var(--info-foreground)]",
+          "data-[state=indeterminate]:bg-[var(--info)] data-[state=indeterminate]:border-[var(--info)] data-[state=indeterminate]:text-[var(--info-foreground)]",
+          "disabled:data-[state=checked]:bg-disabled-bg disabled:data-[state=checked]:border-disabled-border disabled:data-[state=checked]:text-disabled-text",
+          "disabled:data-[state=indeterminate]:bg-disabled-bg disabled:data-[state=indeterminate]:border-disabled-border disabled:data-[state=indeterminate]:text-disabled-text",
+        ],
         className
       )}
       {...props}

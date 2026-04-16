@@ -21,9 +21,11 @@ import { DateRangePicker, type DateRange } from "@/components/ui/date-range-pick
 import { AvatarUpload } from "@/components/ui/avatar-upload"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { ImageUploadMultiple } from "@/components/ui/image-upload-multiple"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { MailIcon, UserIcon, LockIcon, PhoneIcon, AlertCircleIcon, CheckCircleIcon, BuildingIcon } from "lucide-react"
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
@@ -63,12 +65,16 @@ function FormSection({ title, children }: { title: string; children: React.React
 export default function FormsPage() {
   const [searchValue, setSearchValue] = useState("")
   const [sliderValue, setSliderValue] = useState([40])
+  const [priceRange, setPriceRange] = useState([200, 800])
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [capacity, setCapacity] = useState([4])
+  const [basicHtml, setBasicHtml] = useState<string>("")
+  const [richHtml, setRichHtml] = useState<string>("")
 
   useEffect(() => { window.scrollTo(0, 0) }, [])
 
   return (
+    <TooltipProvider>
     <div className="min-h-screen bg-background text-foreground">
       <Toaster />
       <PreviewBar activePage="forms" />
@@ -120,12 +126,38 @@ export default function FormsPage() {
           </Row>
         </Section>
 
-        <Section title="Textarea" description="Multiline text inputs with size variants.">
+        <Section title="Textarea" description="Multiline text inputs — auto-expands with content.">
           <Row label="Sizes">
             <div className="w-full space-y-3 max-w-sm">
               <Textarea size="sm" placeholder="Small textarea" /><Textarea size="default" placeholder="Default textarea" /><Textarea size="lg" placeholder="Large textarea" />
             </div>
           </Row>
+        </Section>
+
+        <Section title="Rich Text Editor — Basic" description="Bold, italic, underline, lists and alignment. Use for short structured content like booking notes or member bios.">
+          <Row label="Default">
+            <div className="w-full">
+              <RichTextEditor value={basicHtml} onChange={setBasicHtml} placeholder="Start typing your content..." />
+            </div>
+          </Row>
+          {basicHtml && basicHtml !== "<p></p>" && (
+            <Row label="HTML output">
+              <pre className="w-full rounded-lg border border-border bg-muted p-4 text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap">{basicHtml}</pre>
+            </Row>
+          )}
+        </Section>
+
+        <Section title="Rich Text Editor — Rich" description="Full formatting including headings, links, images, tables and code. Use for club descriptions, news articles and event pages.">
+          <Row label="Default">
+            <div className="w-full">
+              <RichTextEditor variant="rich" value={richHtml} onChange={setRichHtml} placeholder="Start typing your content..." />
+            </div>
+          </Row>
+          {richHtml && richHtml !== "<p></p>" && (
+            <Row label="HTML output">
+              <pre className="w-full rounded-lg border border-border bg-muted p-4 text-xs font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap">{richHtml}</pre>
+            </Row>
+          )}
         </Section>
 
         <Section title="Select" description="Dropdown select with size variants.">
@@ -138,14 +170,27 @@ export default function FormsPage() {
           </Row>
         </Section>
 
-        <Section title="Slider" description="Range input slider.">
-          <Row label="Default">
-            <div className="w-full max-w-sm space-y-4">
+        <Section title="Slider" description="Single value and range sliders.">
+          <Row label="Single value">
+            <div className="w-full max-w-sm space-y-3">
               <Slider value={sliderValue} onValueChange={setSliderValue} min={0} max={100} step={1} tabIndex={-1} />
               <p className="text-sm text-muted-foreground">Value: {sliderValue[0]}</p>
             </div>
           </Row>
-          <Row label="Disabled"><div className="w-full max-w-sm"><Slider defaultValue={[60]} min={0} max={100} step={1} disabled tabIndex={-1} /></div></Row>
+          <Row label="Range">
+            <div className="w-full max-w-sm space-y-3">
+              <Slider value={priceRange} onValueChange={setPriceRange} min={0} max={1000} step={10} tabIndex={-1} />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>£{priceRange[0]}</span>
+                <span>£{priceRange[1]}</span>
+              </div>
+            </div>
+          </Row>
+          <Row label="Disabled">
+            <div className="w-full max-w-sm">
+              <Slider defaultValue={[60]} min={0} max={100} step={1} disabled tabIndex={-1} />
+            </div>
+          </Row>
         </Section>
 
         <Section title="Form elements" description="Checkbox, radio and switch — all states.">
@@ -162,6 +207,22 @@ export default function FormsPage() {
                 <div className="flex items-center gap-2"><Checkbox id="cb-d-un" disabled /><Label htmlFor="cb-d-un">Unchecked</Label></div>
                 <div className="flex items-center gap-2"><Checkbox id="cb-d-ch" disabled defaultChecked /><Label htmlFor="cb-d-ch">Checked</Label></div>
                 <div className="flex items-center gap-2"><Checkbox id="cb-d-in" disabled checked="indeterminate" /><Label htmlFor="cb-d-in">Indeterminate</Label></div>
+              </div>
+            </div>
+          </Row>
+          <Row label="Info — for table row selection">
+            <div className="flex flex-wrap items-start gap-8">
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Default</p>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-un" variant="info" /><Label htmlFor="cb-info-un">Unchecked</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-ch" variant="info" defaultChecked /><Label htmlFor="cb-info-ch">Checked</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-in" variant="info" checked="indeterminate" /><Label htmlFor="cb-info-in">Indeterminate</Label></div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Disabled</p>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-d-un" variant="info" disabled /><Label htmlFor="cb-info-d-un">Unchecked</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-d-ch" variant="info" disabled defaultChecked /><Label htmlFor="cb-info-d-ch">Checked</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="cb-info-d-in" variant="info" disabled checked="indeterminate" /><Label htmlFor="cb-info-d-in">Indeterminate</Label></div>
               </div>
             </div>
           </Row>
@@ -222,201 +283,100 @@ export default function FormsPage() {
 
         <Section title="Field" description="Label, hint, error and required indicator — works with any input type.">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-            <Field label="Full name" required hint="As it appears on your membership card">
-              <Input placeholder="Rob Thomas" />
-            </Field>
-            <Field label="Email address" required>
-              <Input type="email" placeholder="rob@example.com" />
-            </Field>
+            <Field label="Full name" required hint="As it appears on your membership card"><Input placeholder="Rob Thomas" /></Field>
+            <Field label="Email address" required><Input type="email" placeholder="rob@example.com" /></Field>
             <Field label="Sport">
-              <Select>
-                <SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tennis">Tennis</SelectItem>
-                  <SelectItem value="padel">Padel</SelectItem>
-                  <SelectItem value="squash">Squash</SelectItem>
-                  <SelectItem value="pickleball">Pickleball</SelectItem>
-                </SelectContent>
-              </Select>
+              <Select><SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger><SelectContent><SelectItem value="tennis">Tennis</SelectItem><SelectItem value="padel">Padel</SelectItem><SelectItem value="squash">Squash</SelectItem><SelectItem value="pickleball">Pickleball</SelectItem></SelectContent></Select>
             </Field>
-            <Field label="Notes" hint="Optional — visible to admins only">
-              <Textarea placeholder="Any additional notes..." />
-            </Field>
-            <Field label="Email address" error="Please enter a valid email address" required>
-              <Input type="email" defaultValue="not-an-email" aria-invalid />
-            </Field>
-            <Field label="Username" disabled hint="Cannot be changed after registration">
-              <Input defaultValue="robthomas" />
-            </Field>
-            <Field label="Booking window">
-              <DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Select dates" />
-            </Field>
-            <Field label="Profile photo" hint="JPG, PNG or WebP · max 2MB">
-              <AvatarUpload size="default" onUpload={(f: File) => toast.success(`Uploaded: ${f.name}`)} />
-            </Field>
+            <Field label="Notes" hint="Optional — visible to admins only"><Textarea placeholder="Any additional notes..." /></Field>
+            <Field label="Email address" error="Please enter a valid email address" required><Input type="email" defaultValue="not-an-email" aria-invalid /></Field>
+            <Field label="Username" disabled hint="Cannot be changed after registration"><Input defaultValue="robthomas" /></Field>
+            <Field label="Booking window"><DateRangePicker value={dateRange} onChange={setDateRange} placeholder="Select dates" /></Field>
+            <Field label="Profile photo" hint="JPG, PNG or WebP · max 2MB"><AvatarUpload size="default" onUpload={(f: File) => toast.success(`Uploaded: ${f.name}`)} /></Field>
           </div>
         </Section>
 
         <Section title="Single column layout" description="Stacked fields — suits narrow panels, drawers and modals.">
           <Card className="max-w-md">
-            <CardHeader>
-              <CardTitle>Change password</CardTitle>
-              <CardDescription>Enter your current password to set a new one.</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Change password</CardTitle><CardDescription>Enter your current password to set a new one.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
-              <Field label="Current password" required>
-                <InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} />
-              </Field>
-              <Field label="New password" required hint="Minimum 8 characters">
-                <InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} />
-              </Field>
-              <Field label="Confirm new password" required>
-                <InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} />
-              </Field>
+              <Field label="Current password" required><InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} /></Field>
+              <Field label="New password" required hint="Minimum 8 characters"><InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} /></Field>
+              <Field label="Confirm new password" required><InputWithIcon type="password" placeholder="••••••••" leadingIcon={<LockIcon className="size-4" />} /></Field>
             </CardContent>
-            <CardFooter className="flex gap-3">
-              <Button variant="outline" className="flex-1">Cancel</Button>
-              <Button className="flex-1">Update password</Button>
-            </CardFooter>
+            <CardFooter className="flex gap-3"><Button variant="outline" className="flex-1">Cancel</Button><Button className="flex-1">Update password</Button></CardFooter>
           </Card>
         </Section>
 
         <Section title="Two column layout" description="Side-by-side fields — suits wider pages and settings panels.">
           <Card>
-            <CardHeader>
-              <CardTitle>Member profile</CardTitle>
-              <CardDescription>Update the member's personal details.</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Member profile</CardTitle><CardDescription>Update the member's personal details.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
               <FormRow>
                 <Field label="First name" required><Input placeholder="Rob" /></Field>
                 <Field label="Last name" required><Input placeholder="Thomas" /></Field>
               </FormRow>
               <FormRow>
-                <Field label="Email address" required>
-                  <InputWithIcon type="email" placeholder="rob@example.com" leadingIcon={<MailIcon className="size-4" />} />
-                </Field>
-                <Field label="Phone number">
-                  <InputWithIcon type="tel" placeholder="+44 7700 900000" leadingIcon={<PhoneIcon className="size-4" />} />
-                </Field>
+                <Field label="Email address" required><InputWithIcon type="email" placeholder="rob@example.com" leadingIcon={<MailIcon className="size-4" />} /></Field>
+                <Field label="Phone number"><InputWithIcon type="tel" placeholder="+44 7700 900000" leadingIcon={<PhoneIcon className="size-4" />} /></Field>
               </FormRow>
               <FormRow>
                 <Field label="Membership type" required>
-                  <Select>
-                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full">Full Member</SelectItem>
-                      <SelectItem value="junior">Junior</SelectItem>
-                      <SelectItem value="social">Social</SelectItem>
-                      <SelectItem value="family">Family</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Select><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger><SelectContent><SelectItem value="full">Full Member</SelectItem><SelectItem value="junior">Junior</SelectItem><SelectItem value="social">Social</SelectItem><SelectItem value="family">Family</SelectItem></SelectContent></Select>
                 </Field>
-                <Field label="Home club">
-                  <InputWithIcon placeholder="Wimbledon LTC" leadingIcon={<BuildingIcon className="size-4" />} />
-                </Field>
+                <Field label="Home club"><InputWithIcon placeholder="Wimbledon LTC" leadingIcon={<BuildingIcon className="size-4" />} /></Field>
               </FormRow>
-              <Field label="Bio" hint="Displayed on the member's public profile">
-                <Textarea placeholder="Tell us a bit about yourself..." className="min-h-[100px]" />
-              </Field>
+              <Field label="Bio" hint="Displayed on the member's public profile"><Textarea placeholder="Tell us a bit about yourself..." className="min-h-[100px]" /></Field>
             </CardContent>
-            <CardFooter className="flex gap-3 justify-end">
-              <Button variant="outline">Discard changes</Button>
-              <Button onClick={() => toast.success("Profile updated")}>Save profile</Button>
-            </CardFooter>
+            <CardFooter className="flex gap-3 justify-end"><Button variant="outline">Discard changes</Button><Button onClick={() => toast.success("Profile updated")}>Save profile</Button></CardFooter>
           </Card>
         </Section>
 
         <Section title="Sectioned layout" description="Groups of fields with headings — suits longer forms.">
           <Card>
-            <CardHeader>
-              <CardTitle>Add court</CardTitle>
-              <CardDescription>Configure a new bookable court at this venue.</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Add court</CardTitle><CardDescription>Configure a new bookable court at this venue.</CardDescription></CardHeader>
             <CardContent className="space-y-8">
               <FormSection title="Court details">
                 <FormRow>
                   <Field label="Court name" required><Input placeholder="Court 1" /></Field>
                   <Field label="Surface type" required>
-                    <Select>
-                      <SelectTrigger><SelectValue placeholder="Select surface" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hard">Hard court</SelectItem>
-                        <SelectItem value="clay">Clay</SelectItem>
-                        <SelectItem value="grass">Grass</SelectItem>
-                        <SelectItem value="carpet">Carpet</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Select><SelectTrigger><SelectValue placeholder="Select surface" /></SelectTrigger><SelectContent><SelectItem value="hard">Hard court</SelectItem><SelectItem value="clay">Clay</SelectItem><SelectItem value="grass">Grass</SelectItem><SelectItem value="carpet">Carpet</SelectItem></SelectContent></Select>
                   </Field>
                 </FormRow>
                 <FormRow>
                   <Field label="Sport" required>
-                    <Select>
-                      <SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="tennis">Tennis</SelectItem>
-                        <SelectItem value="padel">Padel</SelectItem>
-                        <SelectItem value="squash">Squash</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Select><SelectTrigger><SelectValue placeholder="Select sport" /></SelectTrigger><SelectContent><SelectItem value="tennis">Tennis</SelectItem><SelectItem value="padel">Padel</SelectItem><SelectItem value="squash">Squash</SelectItem></SelectContent></Select>
                   </Field>
                   <Field label="Max capacity" hint={`${capacity[0]} players`}>
-                    <div className="pt-2">
-                      <Slider value={capacity} onValueChange={setCapacity} min={1} max={8} step={1} />
-                    </div>
+                    <div className="pt-2"><Slider value={capacity} onValueChange={setCapacity} min={1} max={8} step={1} /></div>
                   </Field>
                 </FormRow>
               </FormSection>
               <Separator />
               <FormSection title="Pricing">
                 <FormRow>
-                  <Field label="Peak rate (per hour)" required>
-                    <InputGroup><InputGroupText position="start">£</InputGroupText><InputGroupInput type="number" placeholder="12.00" /></InputGroup>
-                  </Field>
-                  <Field label="Off-peak rate (per hour)">
-                    <InputGroup><InputGroupText position="start">£</InputGroupText><InputGroupInput type="number" placeholder="8.00" /></InputGroup>
-                  </Field>
+                  <Field label="Peak rate (per hour)" required><InputGroup><InputGroupText position="start">£</InputGroupText><InputGroupInput type="number" placeholder="12.00" /></InputGroup></Field>
+                  <Field label="Off-peak rate (per hour)"><InputGroup><InputGroupText position="start">£</InputGroupText><InputGroupInput type="number" placeholder="8.00" /></InputGroup></Field>
                 </FormRow>
               </FormSection>
               <Separator />
               <FormSection title="Settings">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div><p className="text-sm font-medium text-foreground">Online booking</p><p className="text-xs text-muted-foreground">Allow members to book this court online</p></div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div><p className="text-sm font-medium text-foreground">Require approval</p><p className="text-xs text-muted-foreground">Admin must approve each booking</p></div>
-                    <Switch />
-                  </div>
+                  <div className="flex items-center justify-between"><div><p className="text-sm font-medium text-foreground">Online booking</p><p className="text-xs text-muted-foreground">Allow members to book this court online</p></div><Switch defaultChecked /></div>
+                  <div className="flex items-center justify-between"><div><p className="text-sm font-medium text-foreground">Require approval</p><p className="text-xs text-muted-foreground">Admin must approve each booking</p></div><Switch /></div>
                 </div>
               </FormSection>
             </CardContent>
-            <CardFooter className="flex gap-3 justify-end">
-              <Button variant="outline">Cancel</Button>
-              <Button onClick={() => toast.success("Court created")}>Create court</Button>
-            </CardFooter>
+            <CardFooter className="flex gap-3 justify-end"><Button variant="outline">Cancel</Button><Button onClick={() => toast.success("Court created")}>Create court</Button></CardFooter>
           </Card>
         </Section>
 
         <Section title="Validation states" description="Error and success feedback on form submission.">
           <div className="space-y-6 max-w-lg">
-            <Alert variant="destructive-outline">
-              <AlertCircleIcon className="size-4" />
-              <AlertTitle>Please fix the errors below</AlertTitle>
-              <AlertDescription>3 fields require your attention before you can continue.</AlertDescription>
-            </Alert>
-            <Field label="Email address" required error="Please enter a valid email address">
-              <InputWithIcon type="email" defaultValue="not-an-email" leadingIcon={<MailIcon className="size-4" />} aria-invalid />
-            </Field>
-            <Field label="Username" required error="This username is already taken">
-              <InputWithIcon defaultValue="robthomas" leadingIcon={<UserIcon className="size-4" />} aria-invalid />
-            </Field>
-            <Alert variant="success-outline">
-              <CheckCircleIcon className="size-4" />
-              <AlertTitle>All fields valid</AlertTitle>
-              <AlertDescription>Your form is ready to submit.</AlertDescription>
-            </Alert>
+            <Alert variant="destructive-outline"><AlertCircleIcon className="size-4" /><AlertTitle>Please fix the errors below</AlertTitle><AlertDescription>3 fields require your attention before you can continue.</AlertDescription></Alert>
+            <Field label="Email address" required error="Please enter a valid email address"><InputWithIcon type="email" defaultValue="not-an-email" leadingIcon={<MailIcon className="size-4" />} aria-invalid /></Field>
+            <Field label="Username" required error="This username is already taken"><InputWithIcon defaultValue="robthomas" leadingIcon={<UserIcon className="size-4" />} aria-invalid /></Field>
+            <Alert variant="success-outline"><CheckCircleIcon className="size-4" /><AlertTitle>All fields valid</AlertTitle><AlertDescription>Your form is ready to submit.</AlertDescription></Alert>
           </div>
         </Section>
 
@@ -443,26 +403,17 @@ export default function FormsPage() {
 
         <Section title="Media fields" description="Image and avatar upload in form context.">
           <Card className="max-w-lg">
-            <CardHeader>
-              <CardTitle>Club branding</CardTitle>
-              <CardDescription>Upload your club logo and banner image.</CardDescription>
-            </CardHeader>
+            <CardHeader><CardTitle>Club branding</CardTitle><CardDescription>Upload your club logo and banner image.</CardDescription></CardHeader>
             <CardContent className="space-y-6">
-              <Field label="Club logo" hint="Square image recommended · max 2MB">
-                <AvatarUpload size="lg" onUpload={(f: File) => toast.success(`Logo uploaded: ${f.name}`)} />
-              </Field>
-              <Field label="Club banner" hint="16:9 ratio recommended · max 2MB">
-                <ImageUpload placeholder="Upload club banner" onUpload={(f: File) => toast.success(`Banner uploaded: ${f.name}`)} />
-              </Field>
+              <Field label="Club logo" hint="Square image recommended · max 2MB"><AvatarUpload size="lg" onUpload={(f: File) => toast.success(`Logo uploaded: ${f.name}`)} /></Field>
+              <Field label="Club banner" hint="16:9 ratio recommended · max 2MB"><ImageUpload placeholder="Upload club banner" onUpload={(f: File) => toast.success(`Banner uploaded: ${f.name}`)} /></Field>
             </CardContent>
-            <CardFooter className="flex gap-3 justify-end">
-              <Button variant="outline">Discard</Button>
-              <Button onClick={() => toast.success("Branding saved")}>Save branding</Button>
-            </CardFooter>
+            <CardFooter className="flex gap-3 justify-end"><Button variant="outline">Discard</Button><Button onClick={() => toast.success("Branding saved")}>Save branding</Button></CardFooter>
           </Card>
         </Section>
 
       </div>
     </div>
+    </TooltipProvider>
   )
 }
