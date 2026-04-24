@@ -4,11 +4,9 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { BellIcon, SearchIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useTheme } from "@/components/ui/theme-provider"
+import { Logo } from "@/components/ui/logo"
 
 type TopBarProps = {
-  logoLight?:  string
-  logoDark?:   string
   brandName?:  string
   userName?:   string
   userAvatar?: string
@@ -16,16 +14,11 @@ type TopBarProps = {
 }
 
 export function TopBar({
-  logoLight  = "/logos/clubspark-light.svg",
-  logoDark   = "/logos/clubspark-dark.svg",
   brandName  = "Clubspark",
   userName   = "Paul Lyons",
   userAvatar,
   className,
 }: TopBarProps) {
-  const { isDark } = useTheme()
-  const logo = isDark ? logoLight : logoDark
-
   const initials = userName.split(" ").map(n => n[0]).join("").slice(0, 2)
 
   return (
@@ -36,7 +29,7 @@ export function TopBar({
 
       {/* Logo */}
       <div className="flex items-center">
-        <img src={logo} alt={brandName} className="h-11 w-auto object-contain" />
+        <Logo alt={brandName} size="lg" />
       </div>
 
       {/* Right side actions */}

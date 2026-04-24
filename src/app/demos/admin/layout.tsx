@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Sidebar1 } from "@/components/ui/sidebar-1"
-import { useTheme, type Theme } from "@/components/ui/theme-provider"
+import { useTheme, type Theme } from "@/lib/theme-provider"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -78,7 +78,7 @@ export default function AdminDemoLayout({ children }: { children: React.ReactNod
     <div className="flex flex-col h-screen overflow-hidden">
       <DevBar />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar1 logo="/logos/clubspark-light.svg" />
+        <Sidebar1 />
         <main className="flex-1 overflow-y-auto bg-background">
           {children}
         </main>

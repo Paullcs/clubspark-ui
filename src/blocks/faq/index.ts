@@ -1,0 +1,6 @@
+export { FaqSection1 } from "./faq-section-1"
+export type { FaqSection1Props, FaqItem } from "./faq-section-1"
+export { FaqSection2 } from "./faq-section-2"
+export type { FaqSection2Props } from "./faq-section-2"
+export { FaqSection3 } from "./faq-section-3"
+export type { FaqSection3Props } from "./faq-section-3"

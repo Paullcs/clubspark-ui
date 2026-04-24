@@ -74,7 +74,7 @@ const tableTokens = `
   --table-row-hover: var(--neutral-50);
   --table-row-expanded-bg: var(--muted);
   --table-bulk-bar-bg: var(--muted);
-  --table-row-selected: var(--info-subtle);
+  --table-row-selected: var(--info-soft);
   --table-row-selected-border: var(--info);
   --chart-1: var(--primary-600);
   --chart-2: var(--accent-500);
@@ -121,7 +121,7 @@ ${flatTokens(base)}
   --active: hsl(173 70% 52%); --active-foreground: hsl(173 76% 10%); --active-subtle: hsl(173 76% 15%); --active-border: hsl(173 76% 21%); --active-text: hsl(173 70% 52%);
   --warning: hsl(22 90% 56%); --warning-foreground: hsl(22 100% 12%); --warning-subtle: hsl(22 100% 19%); --warning-border: hsl(22 100% 27%); --warning-text: hsl(22 90% 56%);
   --pending: hsl(40 100% 68%); --pending-foreground: hsl(40 80% 14%); --pending-subtle: hsl(40 85% 24%); --pending-border: hsl(40 90% 36%); --pending-text: hsl(40 100% 68%);
-  --info: hsl(221 90% 62%); --info-foreground: hsl(221 100% 13%); --info-subtle: hsl(221 100% 20%); --info-border: hsl(221 100% 29%); --info-text: hsl(221 90% 62%);
+  --info: hsl(221 90% 62%); --info-foreground: hsl(221 100% 13%); --info-soft: hsl(221 100% 16%); --info-subtle: hsl(221 100% 20%); --info-border: hsl(221 100% 29%); --info-text: hsl(221 90% 62%);
   --destructive: hsl(353 63% 60%); --destructive-foreground: hsl(353 66% 13%); --destructive-subtle: hsl(353 66% 21%); --destructive-border: hsl(353 66% 31%); --destructive-text: hsl(353 63% 60%);
   --highlight: hsl(249 80% 68%); --highlight-foreground: hsl(249 70% 17%); --highlight-subtle: hsl(249 75% 28%); --highlight-border: hsl(249 80% 40%); --highlight-text: hsl(249 80% 68%);
   --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.20);
@@ -134,7 +134,7 @@ ${flatTokens(base)}
 
 `
 
-// Theme classes — ALL brand tokens only in theme class, nothing in :root
+// Theme classes
 brands.forEach(({ theme, tokens }, i) => {
   css += `/* ${i+3}. THEME — ${theme.toUpperCase()} */\n.theme-${theme} {\n${themeVars(tokens)}${tableTokens}\n}\n\n${darkBlock(`.theme-${theme}`, tokens)}\n`
 })
@@ -199,6 +199,7 @@ css += `@theme inline {
   --color-pending-text: var(--pending-text);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
   --color-info-subtle: var(--info-subtle);
   --color-info-border: var(--info-border);
   --color-info-text: var(--info-text);
@@ -302,6 +303,35 @@ css += `@theme inline {
 
 @layer components {
   h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.25; }
+}
+
+/* Footer links — scoped reset */
+.footer a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+.footer a:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Checkbox info variant — table row selection */
+[data-slot="checkbox"][data-variant="info"][data-state="checked"],
+[data-slot="checkbox"][data-variant="info"][data-state="indeterminate"] {
+  background-color: var(--info);
+  border-color: var(--info);
+  color: var(--info-foreground);
+}
+
+/* Pinned column shadows — inset so they're never clipped by overflow */
+td[data-pinned-last-left],
+th[data-pinned-last-left] {
+  box-shadow: 4px 0 6px rgba(0,0,0,0.15);
+}
+
+td[data-pinned-first-right],
+th[data-pinned-first-right] {
+  box-shadow: -4px 0 6px rgba(0,0,0,0.15);
 }
 `
 

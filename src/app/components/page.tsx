@@ -1,7 +1,8 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import * as React from "react"
 import { PreviewBar } from "@/components/ui/preview-bar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -27,11 +28,12 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatCard } from "@/components/ui/stat-card"
 import { DateRangePicker, type DateRange } from "@/components/ui/date-range-picker"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command"
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator, CommandShortcut } from "@/components/ui/command"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Leaderboard } from "@/components/ui/leaderboard"
+import { EmptyState } from "@/components/ui/empty-state"
 import {
   AlertCircleIcon, MailIcon, UserIcon, CheckCircleIcon,
   InfoIcon, AlertTriangleIcon, ClockIcon, CalendarIcon,
@@ -39,11 +41,12 @@ import {
   AlignLeftIcon, AlignCenterIcon, AlignRightIcon,
   BoldIcon, ItalicIcon, UnderlineIcon,
   LayoutGridIcon, ListIcon,
+  FolderOpenIcon, SearchIcon, BellIcon, MessageSquareIcon, UsersIcon, BookOpenIcon, PlusIcon, UploadIcon, ExternalLinkIcon,
 } from "lucide-react"
 
 const Calendar = dynamic(
   () => import("@/components/ui/calendar").then((mod) => mod.Calendar),
-  { ssr: false }
+  { ssr: false, loading: () => <div className="rounded-lg border border-border/50 h-[300px] w-[280px]" /> }
 )
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
@@ -69,11 +72,215 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
+function CommandDialogDemo() {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+        <SearchIcon className="size-4 mr-2" />
+        Search
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput placeholder="Search bookings, members, courts…" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Bookings">
+            <CommandItem><CalendarIcon className="size-4 mr-2" />BK-3E83 — Rob Thomas</CommandItem>
+            <CommandItem><CalendarIcon className="size-4 mr-2" />BK-3E84 — Sarah Okafor</CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Members">
+            <CommandItem><UserIcon className="size-4 mr-2" />Rob Thomas</CommandItem>
+            <CommandItem><UserIcon className="size-4 mr-2" />Sarah Okafor</CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Actions">
+            <CommandItem><SettingsIcon className="size-4 mr-2" />Settings</CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
+    </>
+  )
+}
+
+// ─── Pagination variants — live demos for selecting the DataTable default ────
+
+/**
+ * Shared helper: given current page + total pages, return an array describing
+ * which links to render (numbers + ellipses). Keeps numbered variants in sync.
+ * Rule: always show first, last, current, and neighbours; collapse the rest.
+ */
+function paginationRange(current: number, total: number): (number | "ellipsis")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | "ellipsis")[] = [1]
+  const start = Math.max(2, current - 1)
+  const end   = Math.min(total - 1, current + 1)
+  if (start > 2) pages.push("ellipsis")
+  for (let i = start; i <= end; i++) pages.push(i)
+  if (end < total - 1) pages.push("ellipsis")
+  pages.push(total)
+  return pages
+}
+
+function PaginationFullDemo() {
+  const total = 12
+  const [current, setCurrent] = React.useState(3)
+  const range = paginationRange(current, total)
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current > 1) setCurrent(current - 1) }}
+          />
+        </PaginationItem>
+        {range.map((p, i) =>
+          p === "ellipsis" ? (
+            <PaginationItem key={`e${i}`}><PaginationEllipsis /></PaginationItem>
+          ) : (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href="#"
+                isActive={p === current}
+                onClick={(e) => { e.preventDefault(); setCurrent(p) }}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          )
+        )}
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current < total) setCurrent(current + 1) }}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
+}
+
+function PaginationNumbersOnlyDemo() {
+  const total = 12
+  const [current, setCurrent] = React.useState(3)
+  const range = paginationRange(current, total)
+  return (
+    <Pagination>
+      <PaginationContent>
+        {range.map((p, i) =>
+          p === "ellipsis" ? (
+            <PaginationItem key={`e${i}`}><PaginationEllipsis /></PaginationItem>
+          ) : (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href="#"
+                isActive={p === current}
+                onClick={(e) => { e.preventDefault(); setCurrent(p) }}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          )
+        )}
+      </PaginationContent>
+    </Pagination>
+  )
+}
+
+function PaginationPrevNextTextDemo() {
+  const total = 12
+  const [current, setCurrent] = React.useState(3)
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current > 1) setCurrent(current - 1) }}
+          />
+        </PaginationItem>
+        <PaginationItem>
+          <span className="text-sm text-muted-foreground px-3">
+            Page {current} of {total}
+          </span>
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current < total) setCurrent(current + 1) }}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
+}
+
+function PaginationCompactIconsDemo() {
+  const total = 12
+  const [current, setCurrent] = React.useState(3)
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current > 1) setCurrent(current - 1) }}
+          />
+        </PaginationItem>
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current < total) setCurrent(current + 1) }}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
+}
+
+function PaginationLongRangeDemo() {
+  const total = 20
+  const [current, setCurrent] = React.useState(7)
+  const range = paginationRange(current, total)
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current > 1) setCurrent(current - 1) }}
+          />
+        </PaginationItem>
+        {range.map((p, i) =>
+          p === "ellipsis" ? (
+            <PaginationItem key={`e${i}`}><PaginationEllipsis /></PaginationItem>
+          ) : (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href="#"
+                isActive={p === current}
+                onClick={(e) => { e.preventDefault(); setCurrent(p) }}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          )
+        )}
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => { e.preventDefault(); if (current < total) setCurrent(current + 1) }}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
+}
+
 export default function ComponentsPage() {
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
-
-  useEffect(() => { window.scrollTo(0, 0) }, [])
 
   return (
     <TooltipProvider>
@@ -97,6 +304,8 @@ export default function ComponentsPage() {
               </Row>
               <Row label="Other"><Button variant="ghost">Ghost</Button><Button variant="link">Link</Button><Button variant="negative">Negative</Button></Row>
               <Row label="Sizes"><Button size="sm">Small</Button><Button size="default">Default</Button><Button size="lg">Large</Button><Button size="xl">X-Large</Button></Row>
+              <Row label="Pill shape"><Button shape="pill" size="sm">Small</Button><Button shape="pill">Default</Button><Button shape="pill" size="lg">Large</Button><Button shape="pill" size="xl">X-Large</Button></Row>
+              <Row label="Pill variants"><Button shape="pill">Primary</Button><Button shape="pill" variant="outline">Outline</Button><Button shape="pill" variant="accent">Accent</Button><Button shape="pill" variant="destructive">Destructive</Button><Button shape="pill" variant="success">Success</Button></Row>
               <Row label="States"><Button disabled>Disabled</Button><Button variant="destructive" disabled>Disabled destructive</Button></Row>
             </Section>
 
@@ -213,10 +422,10 @@ export default function ComponentsPage() {
 
             <Section title="Breadcrumb" description="Navigational trail showing the current page location.">
               <Row label="Default">
-                <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink href="#">Home</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="#">Venues</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>Wimbledon LTC</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+                <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink href="javascript:void(0)">Home</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="javascript:void(0)">Venues</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>Wimbledon LTC</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
               </Row>
               <Row label="Deeper path">
-                <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink href="#">Dashboard</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="#">Bookings</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="#">Court 1</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>BK-3E83</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+                <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbLink href="javascript:void(0)">Dashboard</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="javascript:void(0)">Bookings</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink href="javascript:void(0)">Court 1</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>BK-3E83</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
               </Row>
             </Section>
 
@@ -232,7 +441,7 @@ export default function ComponentsPage() {
               <Row label="With action">
                 <Card className="w-full max-w-sm">
                   <CardHeader><CardTitle>Confirm cancellation</CardTitle><CardDescription>This will cancel booking BK-3E83 and notify the customer.</CardDescription></CardHeader>
-                  <CardFooter className="flex gap-3"><Button variant="outline" className="flex-1">Keep booking</Button><Button variant="destructive" className="flex-1">Cancel booking</Button></CardFooter>
+                  <CardFooter className="flex gap-3"><Button variant="outline" className="flex-1" tabIndex={-1}>Keep booking</Button><Button variant="destructive" className="flex-1" tabIndex={-1}>Cancel booking</Button></CardFooter>
                 </Card>
               </Row>
             </Section>
@@ -259,26 +468,8 @@ export default function ComponentsPage() {
             </Section>
 
             <Section title="Command" description="Keyboard-driven search palette for quick navigation and actions.">
-              <Row label="Inline">
-                <Command className="rounded-lg border border-border shadow-sm w-full max-w-sm">
-                  <CommandInput placeholder="Search bookings, members, courts…" autoFocus={false} />
-                  <CommandList>
-                    <CommandEmpty>No results found.</CommandEmpty>
-                    <CommandGroup heading="Bookings">
-                      <CommandItem><CalendarIcon className="size-4 mr-2" />BK-3E83 — Rob Thomas<CommandShortcut>⌘B</CommandShortcut></CommandItem>
-                      <CommandItem><CalendarIcon className="size-4 mr-2" />BK-3E84 — Sarah Okafor</CommandItem>
-                    </CommandGroup>
-                    <CommandSeparator />
-                    <CommandGroup heading="Members">
-                      <CommandItem><UserIcon className="size-4 mr-2" />Rob Thomas</CommandItem>
-                      <CommandItem><UserIcon className="size-4 mr-2" />Sarah Okafor</CommandItem>
-                    </CommandGroup>
-                    <CommandSeparator />
-                    <CommandGroup heading="Actions">
-                      <CommandItem><SettingsIcon className="size-4 mr-2" />Settings<CommandShortcut>⌘,</CommandShortcut></CommandItem>
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
+              <Row label="Opens in command dialog">
+                <CommandDialogDemo />
               </Row>
             </Section>
 
@@ -288,15 +479,36 @@ export default function ComponentsPage() {
                   <NavigationMenuList>
                     <NavigationMenuItem>
                       <NavigationMenuTrigger>Bookings</NavigationMenuTrigger>
-                      <NavigationMenuContent><ul className="grid gap-1 p-3 w-48"><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">All bookings</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Recurring</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Awaiting approval</NavigationMenuLink></li></ul></NavigationMenuContent>
+                      <NavigationMenuContent><ul className="grid gap-1 p-3 w-48"><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">All bookings</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">Recurring</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">Awaiting approval</NavigationMenuLink></li></ul></NavigationMenuContent>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
                       <NavigationMenuTrigger>Members</NavigationMenuTrigger>
-                      <NavigationMenuContent><ul className="grid gap-1 p-3 w-48"><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">All members</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Memberships</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Renewals</NavigationMenuLink></li></ul></NavigationMenuContent>
+                      <NavigationMenuContent><ul className="grid gap-1 p-3 w-48"><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">All members</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">Memberships</NavigationMenuLink></li><li><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">Renewals</NavigationMenuLink></li></ul></NavigationMenuContent>
                     </NavigationMenuItem>
-                    <NavigationMenuItem><NavigationMenuLink className={navigationMenuTriggerStyle()} href="#">Reports</NavigationMenuLink></NavigationMenuItem>
+                    <NavigationMenuItem><NavigationMenuLink className={navigationMenuTriggerStyle()} href="javascript:void(0)">Reports</NavigationMenuLink></NavigationMenuItem>
                   </NavigationMenuList>
                 </NavigationMenu>
+              </Row>
+            </Section>
+
+            <Section
+              title="Pagination"
+              description="Variants composed from the Pagination primitives. Pick which pattern(s) the DataTable should use."
+            >
+              <Row label="Full — Previous / Next with numbered pages and ellipsis">
+                <PaginationFullDemo />
+              </Row>
+              <Row label="Numbers only — no prev/next buttons">
+                <PaginationNumbersOnlyDemo />
+              </Row>
+              <Row label="Previous / Next with page summary — no numbered links">
+                <PaginationPrevNextTextDemo />
+              </Row>
+              <Row label="Compact — icons only">
+                <PaginationCompactIconsDemo />
+              </Row>
+              <Row label="Long range — double ellipsis (current page near the middle)">
+                <PaginationLongRangeDemo />
               </Row>
             </Section>
 
@@ -308,7 +520,7 @@ export default function ComponentsPage() {
             </Section>
 
             <Section title="Calendar" description="Date picker calendar.">
-              <Row label="Default"><Calendar mode="single" selected={date} onSelect={setDate} className="rounded-lg border border-border" /></Row>
+              <Row label="Default"><Calendar mode="single" selected={date} onSelect={setDate} className="rounded-lg border border-border/50" /></Row>
             </Section>
 
             <Section title="Dialog" description="Modal dialogs for confirmations and forms.">
@@ -436,6 +648,29 @@ export default function ComponentsPage() {
                   <div className="flex items-center gap-3 mt-4"><Skeleton className="size-10 rounded-full" /><div className="flex-1 space-y-2"><Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-2/3" /></div></div>
                 </div>
               </Row>
+            </Section>
+
+            <Section title="Empty State" description="Flexible empty state with optional icon, heading, description and actions.">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState heading="No content available" description="There's nothing to display at the moment. Please check back later." />
+                </div>
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState icon={FolderOpenIcon} iconStyle="bare" heading="This folder is empty" description="Start by adding files or creating new folders." />
+                </div>
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState icon={SearchIcon} iconStyle="bare" heading="No results for your search" description="Try using different keywords or check the spelling." />
+                </div>
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState icon={BellIcon} heading="No notifications" description="You're all caught up! We'll notify you when something new happens." />
+                </div>
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState icon={MessageSquareIcon} heading="No messages yet" description="Start a conversation by sending your first message." actions={[{ label: "New Message", icon: PlusIcon, onClick: () => {} }]} />
+                </div>
+                <div className="rounded-lg border border-border/50">
+                  <EmptyState icon={UsersIcon} heading="No team members yet" description="Invite team members to collaborate on your projects." actions={[{ label: "Invite Team Member", icon: PlusIcon, onClick: () => {} }, { label: "Import from CSV", icon: UploadIcon, onClick: () => {}, variant: "outline" }]} />
+                </div>
+              </div>
             </Section>
 
             <Section title="Leaderboard" description="Ranked list with avatar, name, subtitle and value.">

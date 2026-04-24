@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Logo } from "@/components/ui/logo"
 import {
   LayoutDashboardIcon, CalendarIcon, UsersIcon, ClubIcon,
   BarChart2Icon, BuildingIcon, CreditCardIcon, FileTextIcon,
@@ -59,7 +60,6 @@ const defaultNav: NavGroup[] = [
 type Sidebar1Props = {
   nav?:        NavGroup[]
   brandName?:  string
-  logo?:       string   // light/white SVG — shell is always dark so one version is enough
   userName?:   string
   userEmail?:  string
   userAvatar?: string
@@ -69,7 +69,6 @@ type Sidebar1Props = {
 export function Sidebar1({
   nav        = defaultNav,
   brandName  = "Clubspark",
-  logo = "/logos/clubspark-light.svg",
   userName   = "Paul Lyons",
   userEmail  = "paul@clubspark.co.uk",
   userAvatar,
@@ -95,16 +94,7 @@ export function Sidebar1({
 
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-4 h-16 border-b border-neutral-800 shrink-0">
-        {logo ? (
-          <img src={logo} alt={brandName} className="h-10 w-auto object-contain" />
-        ) : (
-          <>
-            <div className="size-7 rounded-md bg-primary flex items-center justify-center shrink-0">
-              <ClubIcon className="size-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-sm">{brandName}</span>
-          </>
-        )}
+        <Logo alt={brandName} size="lg" forceDark />
       </div>
 
       {/* Main nav */}
@@ -160,14 +150,13 @@ export function Sidebar1({
         </button>
       </div>
 
-      {/* Secondary panel — slides in over the top */}
+      {/* Secondary panel */}
       <div
         className={cn(
           "absolute inset-0 flex flex-col bg-neutral-900 transition-transform duration-200 ease-in-out",
           visible ? "translate-x-0" : "translate-x-full"
         )}
       >
-        {/* Panel header */}
         <div className="flex items-center gap-2 px-3 py-4 border-b border-neutral-800 shrink-0">
           <button
             onClick={closePanel}
@@ -178,8 +167,6 @@ export function Sidebar1({
           {panel?.icon && <panel.icon className="size-4 text-neutral-400" />}
           <span className="text-sm font-semibold text-neutral-100">{panel?.label}</span>
         </div>
-
-        {/* Panel items — no icons */}
         <div className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
           {panel?.children?.map(child => (
             <button
@@ -190,8 +177,6 @@ export function Sidebar1({
             </button>
           ))}
         </div>
-
-        {/* User at bottom of panel */}
         <div className="px-3 py-3 border-t border-neutral-800 shrink-0">
           <button className="w-full flex items-center gap-2.5 rounded-md p-1.5 hover:bg-neutral-800 transition-colors group">
             <Avatar size="sm">

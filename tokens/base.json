@@ -1,6 +1,9 @@
 {
   "$description": "Base tokens — never change per brand. Status colours, shadows, spacing, sizing.",
 
+  "logo-light": { "$value": "/logos/clubspark-light.svg", "$type": "string" },
+  "logo-dark":  { "$value": "/logos/clubspark-dark.svg",  "$type": "string" },
+
   "success": {
     "DEFAULT":    { "$value": "hsl(141 65% 29%)", "$type": "color" },
     "foreground": { "$value": "hsl(141 40% 97%)", "$type": "color" },
@@ -32,6 +35,7 @@
   "info": {
     "DEFAULT":    { "$value": "hsl(221 100% 47%)", "$type": "color" },
     "foreground": { "$value": "hsl(221 60% 97%)",  "$type": "color" },
+    "soft":       { "$value": "hsl(221 60% 96%)",  "$type": "color" },
     "subtle":     { "$value": "hsl(221 60% 93%)",  "$type": "color" },
     "border":     { "$value": "hsl(221 60% 85%)",  "$type": "color" },
     "text":       { "$value": "hsl(221 100% 38%)", "$type": "color" }

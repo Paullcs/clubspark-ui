@@ -1,21 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import * as React from "react"
 import { PreviewBar } from "@/components/ui/preview-bar"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ColumnDef } from "@tanstack/react-table"
-import { DataTableFixed } from "@/components/ui/data-table-fixed"
-import { DataTableFluid } from "@/components/ui/data-table-fluid"
-import { DataTableProvider } from "@/components/ui/data-table-provider"
-import { DataTableSortable, DragHandle } from "@/components/ui/data-table-sortable"
-import { StickyTableHeader } from "@/components/ui/sticky-table-header"
-import { SortIcon } from "@/components/ui/data-table-core"
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/tables/table"
+import { DataTable } from "@/components/ui/tables/data-table"
+import { DataTableFixed } from "@/components/ui/tables/data-table-fixed"
+import {
+  DataTableColumnHeader,
+  createSelectColumn,
+} from "@/components/ui/tables/data-table-core"
+import { InvoiceTable } from "@/components/ui/tables/invoice-table"
 
 function Section({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -32,77 +39,260 @@ function Section({ title, description, children }: { title: string; description?
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-6">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{label}</p>
+      <p className="text-xs font-medium text-muted-foreground mb-3">{label}</p>
       <div className="flex flex-wrap items-start gap-3">{children}</div>
     </div>
   )
 }
 
-type DemoBooking = { id: string; ref: string; customer: string; initials: string; court: string; date: string; time: string; duration: number; status: "Confirmed" | "Pending" | "Cancelled" | "Completed"; amount: number; paid: boolean }
-const demoBookings: DemoBooking[] = [
-  { id: "1",  ref: "BK-3E83", customer: "Rob Thomas",      initials: "RT", court: "Court 1 Full", date: "2026-03-28", time: "13:00", duration: 60,  status: "Confirmed",  amount: 12, paid: true  },
-  { id: "2",  ref: "BK-3E84", customer: "Sarah Okafor",    initials: "SO", court: "Court 2 Half", date: "2026-03-28", time: "14:00", duration: 60,  status: "Pending",    amount: 8,  paid: false },
-  { id: "3",  ref: "BK-3E85", customer: "James Whittle",   initials: "JW", court: "Court 1 Full", date: "2026-03-29", time: "09:00", duration: 90,  status: "Confirmed",  amount: 18, paid: true  },
-  { id: "4",  ref: "BK-3E86", customer: "Priya Nair",      initials: "PN", court: "Court 3 Full", date: "2026-03-29", time: "10:00", duration: 60,  status: "Cancelled",  amount: 0,  paid: false },
-  { id: "5",  ref: "BK-3E87", customer: "Marcus Webb",     initials: "MW", court: "Court 2 Full", date: "2026-03-29", time: "11:30", duration: 120, status: "Confirmed",  amount: 24, paid: true  },
-  { id: "6",  ref: "BK-3E88", customer: "Yuki Tanaka",     initials: "YT", court: "Court 1 Half", date: "2026-03-30", time: "08:00", duration: 60,  status: "Completed",  amount: 8,  paid: true  },
-  { id: "7",  ref: "BK-3E89", customer: "Aisha Okonkwo",   initials: "AO", court: "Court 4 Full", date: "2026-03-30", time: "15:00", duration: 60,  status: "Pending",    amount: 12, paid: false },
-  { id: "8",  ref: "BK-3E90", customer: "Dan Sheridan",    initials: "DS", court: "Court 1 Full", date: "2026-03-30", time: "17:00", duration: 90,  status: "Confirmed",  amount: 18, paid: true  },
-  { id: "9",  ref: "BK-3E91", customer: "Fatima Al-Rawi",  initials: "FA", court: "Court 2 Full", date: "2026-03-31", time: "10:00", duration: 60,  status: "Confirmed",  amount: 12, paid: true  },
-  { id: "10", ref: "BK-3E92", customer: "Luke Brennan",    initials: "LB", court: "Court 3 Half", date: "2026-03-31", time: "12:00", duration: 60,  status: "Cancelled",  amount: 0,  paid: false },
-  { id: "11", ref: "BK-3E93", customer: "Chloe Marchetti", initials: "CM", court: "Court 1 Full", date: "2026-04-01", time: "09:00", duration: 60,  status: "Confirmed",  amount: 12, paid: false },
-  { id: "12", ref: "BK-3E94", customer: "Tom Adesanya",    initials: "TA", court: "Court 2 Half", date: "2026-04-01", time: "11:00", duration: 90,  status: "Pending",    amount: 12, paid: false },
+// ─── Demo data — court equipment inventory ───────────────────────────────────
+
+type EquipmentItem = {
+  id:       string
+  sku:      string
+  name:     string
+  category: "Racquet" | "Ball" | "Apparel" | "Footwear" | "Accessory"
+  stock:    number
+  hireRate: number
+  status:   "Available" | "Low stock" | "Out of stock" | "Retired"
+}
+
+const demoEquipment: EquipmentItem[] = [
+  { id: "1",  sku: "RAQ-W001", name: "Wilson Pro Staff 97 v14",     category: "Racquet",   stock: 12, hireRate: 8,  status: "Available"    },
+  { id: "2",  sku: "RAQ-B002", name: "Babolat Pure Drive 2025",     category: "Racquet",   stock: 8,  hireRate: 8,  status: "Available"    },
+  { id: "3",  sku: "RAQ-H003", name: "Head Speed MP 2024",          category: "Racquet",   stock: 3,  hireRate: 8,  status: "Low stock"    },
+  { id: "4",  sku: "BAL-W004", name: "Wilson US Open · tube of 4",  category: "Ball",      stock: 48, hireRate: 3,  status: "Available"    },
+  { id: "5",  sku: "BAL-D005", name: "Dunlop Fort · tube of 4",     category: "Ball",      stock: 0,  hireRate: 3,  status: "Out of stock" },
+  { id: "6",  sku: "APP-T006", name: "Club tennis shirt · adult M", category: "Apparel",   stock: 22, hireRate: 0,  status: "Available"    },
+  { id: "7",  sku: "APP-T007", name: "Club tennis shirt · junior",  category: "Apparel",   stock: 15, hireRate: 0,  status: "Available"    },
+  { id: "8",  sku: "FTW-N008", name: "Nike Vapor Pro · court shoe", category: "Footwear",  stock: 6,  hireRate: 12, status: "Available"    },
+  { id: "9",  sku: "FTW-A009", name: "Adidas Barricade · size 10",  category: "Footwear",  stock: 2,  hireRate: 12, status: "Low stock"    },
+  { id: "10", sku: "ACC-G010", name: "Overgrip · pack of 3",        category: "Accessory", stock: 36, hireRate: 0,  status: "Available"    },
+  { id: "11", sku: "ACC-V011", name: "Vibration dampener",          category: "Accessory", stock: 54, hireRate: 0,  status: "Available"    },
+  { id: "12", sku: "ACC-S012", name: "Racquet string · reel",       category: "Accessory", stock: 1,  hireRate: 0,  status: "Low stock"    },
+  { id: "13", sku: "RAQ-Y013", name: "Yonex EZONE 98 (2022)",       category: "Racquet",   stock: 0,  hireRate: 0,  status: "Retired"      },
+  { id: "14", sku: "APP-S014", name: "Tennis skirt · adult",        category: "Apparel",   stock: 9,  hireRate: 0,  status: "Available"    },
+  { id: "15", sku: "ACC-B015", name: "Ball hopper · 75 balls",      category: "Accessory", stock: 4,  hireRate: 4,  status: "Available"    },
 ]
 
-type DemoMember = { id: string; name: string; initials: string; membership: string; joined: string; status: "Active" | "Expired" | "Pending" }
-const demoMembers: DemoMember[] = [
-  { id: "1", name: "Rob Thomas",      initials: "RT", membership: "Full Member", joined: "Jan 2024", status: "Active"  },
-  { id: "2", name: "Sarah Okafor",    initials: "SO", membership: "Junior",      joined: "Mar 2024", status: "Active"  },
-  { id: "3", name: "James Whittle",   initials: "JW", membership: "Full Member", joined: "Aug 2023", status: "Expired" },
-  { id: "4", name: "Priya Nair",      initials: "PN", membership: "Social",      joined: "Nov 2023", status: "Active"  },
-  { id: "5", name: "Marcus Webb",     initials: "MW", membership: "Full Member", joined: "Feb 2025", status: "Pending" },
-  { id: "6", name: "Yuki Tanaka",     initials: "YT", membership: "Family",      joined: "Apr 2023", status: "Active"  },
-  { id: "7", name: "Aisha Okonkwo",   initials: "AO", membership: "Junior",      joined: "Sep 2024", status: "Active"  },
-  { id: "8", name: "Dan Sheridan",    initials: "DS", membership: "Full Member", joined: "Jun 2022", status: "Expired" },
+const equipmentColumns: ColumnDef<EquipmentItem>[] = [
+  createSelectColumn<EquipmentItem>(),
+  {
+    accessorKey: "sku",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="SKU" />,
+    cell:   ({ row }) => row.original.sku,
+    meta:   { title: "SKU", cellVariant: "secondary", tabularNums: true, width: 110 },
+  },
+  {
+    accessorKey: "name",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Item" />,
+    cell:   ({ row }) => row.original.name,
+    meta:   { title: "Item" },
+  },
+  {
+    accessorKey: "category",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Category" />,
+    cell:   ({ row }) => <Badge variant="outline">{row.original.category}</Badge>,
+    meta:   { title: "Category" },
+  },
+  {
+    accessorKey: "stock",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Stock" />,
+    cell:   ({ row }) => row.original.stock,
+    meta:   { title: "Stock", align: "right", tabularNums: true, width: 90 },
+  },
+  {
+    accessorKey: "hireRate",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Hire / hr" />,
+    cell:   ({ row }) => row.original.hireRate === 0 ? "—" : `£${row.original.hireRate.toFixed(2)}`,
+    meta:   { title: "Hire / hr", align: "right", tabularNums: true, width: 110 },
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell:   ({ row }) => {
+      const s = row.original.status
+      const v = {
+        "Available":    "success",
+        "Low stock":    "warning",
+        "Out of stock": "destructive",
+        "Retired":      "neutral-subtle",
+      } as const
+      return <Badge variant={v[s]}>{s}</Badge>
+    },
+    meta: { title: "Status", width: 130 },
+  },
 ]
 
-type DemoCourt = { id: string; name: string; surface: string; sport: string; status: "Active" | "Inactive" | "Maintenance" }
-const demoCourts: DemoCourt[] = [
-  { id: "1", name: "Court 1", surface: "Hard",  sport: "Tennis",     status: "Active"      },
-  { id: "2", name: "Court 2", surface: "Clay",  sport: "Tennis",     status: "Active"      },
-  { id: "3", name: "Court 3", surface: "Hard",  sport: "Padel",      status: "Active"      },
-  { id: "4", name: "Court 4", surface: "Grass", sport: "Tennis",     status: "Maintenance" },
-  { id: "5", name: "Court 5", surface: "Hard",  sport: "Pickleball", status: "Inactive"    },
+// ─── Demo data — sortable court display order ────────────────────────────────
+
+type Court = {
+  id:        string
+  name:      string
+  surface:   "Hard" | "Clay" | "Grass" | "Artificial"
+  covered:   boolean
+  hireRate:  number
+}
+
+const courtsInitial: Court[] = [
+  { id: "c1", name: "Court 1 — Centre",    surface: "Hard",       covered: false, hireRate: 18 },
+  { id: "c2", name: "Court 2 — North",     surface: "Hard",       covered: false, hireRate: 18 },
+  { id: "c3", name: "Court 3 — North",     surface: "Hard",       covered: false, hireRate: 18 },
+  { id: "c4", name: "Court 4 — Clay",      surface: "Clay",       covered: false, hireRate: 16 },
+  { id: "c5", name: "Court 5 — Clay",      surface: "Clay",       covered: false, hireRate: 16 },
+  { id: "c6", name: "Court 6 — Indoor A",  surface: "Hard",       covered: true,  hireRate: 22 },
+  { id: "c7", name: "Court 7 — Indoor B",  surface: "Hard",       covered: true,  hireRate: 22 },
+  { id: "c8", name: "Court 8 — Practice",  surface: "Artificial", covered: false, hireRate: 12 },
 ]
 
-const fixedColumns: ColumnDef<DemoBooking>[] = [
-  { id: "select", header: ({ table }) => <Checkbox checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")} onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)} aria-label="Select all" />, cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(v) => row.toggleSelected(!!v)} aria-label="Select row" onClick={(e) => e.stopPropagation()} />, enableSorting: false, enableHiding: false, size: 40 },
-  { accessorKey: "ref", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Ref <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.getValue("ref")}</span>, size: 90 },
-  { accessorKey: "customer", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Customer <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => (<div className="flex items-center gap-2.5"><Avatar size="xs"><AvatarFallback>{row.original.initials}</AvatarFallback></Avatar><span className="font-medium text-sm">{row.getValue("customer")}</span></div>), size: 180 },
-  { accessorKey: "court", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Court <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => <span className="text-sm">{row.getValue("court")}</span>, size: 130 },
-  { accessorKey: "date", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Date <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => <span className="text-sm">{new Date(row.getValue("date")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>, size: 120 },
-  { accessorKey: "time", header: () => <span className="text-xs font-medium uppercase tracking-wider">Time</span>, cell: ({ row }) => <span className="text-sm tabular-nums">{row.getValue("time")}</span>, size: 70, enableSorting: false },
-  { accessorKey: "status", header: () => <span className="text-xs font-medium uppercase tracking-wider">Status</span>, cell: ({ row }) => { const s = row.getValue("status") as DemoBooking["status"]; const v = { Confirmed: "success", Pending: "pending", Cancelled: "destructive", Completed: "active" } as const; return <Badge variant={v[s]}>{s}</Badge> }, size: 110 },
-  { accessorKey: "amount", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider ml-auto" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Amount <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => { const a = row.getValue("amount") as number; return <div className="text-right text-sm tabular-nums font-medium">{a === 0 ? <span className="text-muted-foreground">—</span> : `£${a.toFixed(2)}`}</div> }, size: 90 },
-  { accessorKey: "paid", header: () => <span className="text-xs font-medium uppercase tracking-wider">Paid</span>, cell: ({ row }) => { if (row.original.status === "Cancelled") return <span className="text-muted-foreground text-sm">—</span>; return row.getValue("paid") ? <Badge variant="success-solid">Paid</Badge> : <Badge variant="pending">Unpaid</Badge> }, size: 80 },
+const courtColumns: ColumnDef<Court>[] = [
+  {
+    accessorKey: "name",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Court" />,
+    cell:   ({ row }) => row.original.name,
+    meta:   { title: "Court" },
+  },
+  {
+    accessorKey: "surface",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Surface" />,
+    cell:   ({ row }) => <Badge variant="outline">{row.original.surface}</Badge>,
+    meta:   { title: "Surface", width: 140 },
+  },
+  {
+    accessorKey: "covered",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Covered" />,
+    cell:   ({ row }) => row.original.covered ? "Yes" : "No",
+    meta:   { title: "Covered", width: 100 },
+  },
+  {
+    accessorKey: "hireRate",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Hire / hr" />,
+    cell:   ({ row }) => `£${row.original.hireRate.toFixed(2)}`,
+    meta:   { title: "Hire / hr", align: "right", tabularNums: true, width: 120 },
+  },
 ]
 
-const fluidColumns: ColumnDef<DemoMember>[] = [
-  { accessorKey: "name", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Member <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => (<div className="flex items-center gap-2.5"><Avatar size="xs"><AvatarFallback>{row.original.initials}</AvatarFallback></Avatar><span className="font-medium text-sm">{row.getValue("name")}</span></div>) },
-  { accessorKey: "membership", header: ({ column }) => <button className="flex items-center text-xs font-medium uppercase tracking-wider" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Membership <SortIcon direction={column.getIsSorted()} /></button>, cell: ({ row }) => <span className="text-sm">{row.getValue("membership")}</span> },
-  { accessorKey: "joined", header: () => <span className="text-xs font-medium uppercase tracking-wider">Joined</span>, cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("joined")}</span>, enableSorting: false },
-  { accessorKey: "status", header: () => <span className="text-xs font-medium uppercase tracking-wider">Status</span>, cell: ({ row }) => { const s = row.getValue("status") as DemoMember["status"]; const v = { Active: "success", Expired: "destructive", Pending: "pending" } as const; return <Badge variant={v[s]}>{s}</Badge> }, enableSorting: false },
+// ─── Demo data — club members (wide dataset for pinned-columns demo) ─────────
+
+type Member = {
+  id:            string
+  name:          string
+  membership:    "Full" | "Junior" | "Student" | "Off-peak" | "Family" | "Life"
+  status:        "Active" | "Pending" | "Lapsed" | "Cancelled"
+  joined:        string
+  expires:       string
+  balance:       number
+  lastBooking:   string
+  totalBookings: number
+  coach:         string
+  homeClub:      string
+  phone:         string
+  email:         string
+}
+
+const demoMembers: Member[] = [
+  { id: "m1",  name: "Rob Thomas",        membership: "Full",     status: "Active",    joined: "12 Jan 2024", expires: "12 Jan 2027", balance:   0.00, lastBooking: "28 Mar 2026", totalBookings: 142, coach: "Sean Delaney",     homeClub: "Wimbledon LTC",    phone: "+44 7700 900123", email: "rob.thomas@example.com"        },
+  { id: "m2",  name: "Sarah Okafor",      membership: "Family",   status: "Active",    joined: "03 Mar 2023", expires: "03 Mar 2026", balance:  42.00, lastBooking: "27 Mar 2026", totalBookings:  89, coach: "Priya Nair",       homeClub: "Wimbledon LTC",    phone: "+44 7700 900231", email: "sarah.okafor@example.com"      },
+  { id: "m3",  name: "James Whittle",     membership: "Full",     status: "Pending",   joined: "22 Mar 2026", expires: "22 Mar 2027", balance:   0.00, lastBooking: "—",           totalBookings:   0, coach: "—",                homeClub: "Wimbledon LTC",    phone: "+44 7700 900442", email: "james.whittle@example.com"     },
+  { id: "m4",  name: "Priya Nair",        membership: "Life",     status: "Active",    joined: "17 Sep 2018", expires: "—",           balance:   0.00, lastBooking: "29 Mar 2026", totalBookings: 412, coach: "—",                homeClub: "Wimbledon LTC",    phone: "+44 7700 900553", email: "priya.nair@example.com"        },
+  { id: "m5",  name: "Lukas Becker",      membership: "Junior",   status: "Active",    joined: "06 Jun 2025", expires: "06 Jun 2026", balance:   0.00, lastBooking: "26 Mar 2026", totalBookings:  34, coach: "Maya Johansson",   homeClub: "Putney TC",        phone: "+44 7700 900664", email: "lukas.becker@example.com"      },
+  { id: "m6",  name: "Aisha Rahman",      membership: "Off-peak", status: "Active",    joined: "14 Feb 2024", expires: "14 Feb 2026", balance:  18.50, lastBooking: "19 Mar 2026", totalBookings:  67, coach: "Sean Delaney",     homeClub: "Wimbledon LTC",    phone: "+44 7700 900775", email: "aisha.rahman@example.com"      },
+  { id: "m7",  name: "Marco Rossi",       membership: "Student",  status: "Lapsed",    joined: "19 Oct 2022", expires: "19 Oct 2024", balance:  64.00, lastBooking: "02 Oct 2024", totalBookings:  51, coach: "Tom Kowalski",     homeClub: "Putney TC",        phone: "+44 7700 900886", email: "marco.rossi@example.com"       },
+  { id: "m8",  name: "Helen Murray",      membership: "Full",     status: "Cancelled", joined: "01 Apr 2020", expires: "01 Apr 2025", balance:   0.00, lastBooking: "15 Mar 2025", totalBookings: 198, coach: "—",                homeClub: "Wimbledon LTC",    phone: "+44 7700 900997", email: "helen.murray@example.com"      },
+  { id: "m9",  name: "Dylan Reeves",      membership: "Junior",   status: "Active",    joined: "08 Aug 2025", expires: "08 Aug 2026", balance:   0.00, lastBooking: "24 Mar 2026", totalBookings:  22, coach: "Maya Johansson",   homeClub: "Wimbledon LTC",    phone: "+44 7700 901008", email: "dylan.reeves@example.com"      },
+  { id: "m10", name: "Anya Volkov",       membership: "Full",     status: "Active",    joined: "15 Nov 2021", expires: "15 Nov 2026", balance:   0.00, lastBooking: "29 Mar 2026", totalBookings: 234, coach: "Sean Delaney",     homeClub: "Wimbledon LTC",    phone: "+44 7700 901119", email: "anya.volkov@example.com"       },
+  { id: "m11", name: "Kenji Tanaka",      membership: "Full",     status: "Active",    joined: "27 Feb 2023", expires: "27 Feb 2026", balance:  12.00, lastBooking: "23 Mar 2026", totalBookings:  78, coach: "Priya Nair",       homeClub: "Wimbledon LTC",    phone: "+44 7700 901220", email: "kenji.tanaka@example.com"      },
+  { id: "m12", name: "Isla Fernandez",    membership: "Family",   status: "Active",    joined: "04 Jul 2024", expires: "04 Jul 2027", balance:   0.00, lastBooking: "28 Mar 2026", totalBookings:  41, coach: "Tom Kowalski",     homeClub: "Wimbledon LTC",    phone: "+44 7700 901331", email: "isla.fernandez@example.com"    },
 ]
 
-const sortableColumns: ColumnDef<DemoCourt>[] = [
-  { id: "drag", header: () => null, cell: ({ row }) => <DragHandle rowId={row.original.id} />, size: 44 },
-  { accessorKey: "name", header: () => <span className="text-xs font-medium uppercase tracking-wider">Court</span>, cell: ({ row }) => <span className="font-medium text-sm">{row.getValue("name")}</span> },
-  { accessorKey: "surface", header: () => <span className="text-xs font-medium uppercase tracking-wider">Surface</span>, cell: ({ row }) => <span className="text-sm">{row.getValue("surface")}</span> },
-  { accessorKey: "sport", header: () => <span className="text-xs font-medium uppercase tracking-wider">Sport</span>, cell: ({ row }) => <span className="text-sm">{row.getValue("sport")}</span> },
-  { accessorKey: "status", header: () => <span className="text-xs font-medium uppercase tracking-wider">Status</span>, cell: ({ row }) => { const s = row.getValue("status") as DemoCourt["status"]; const v = { Active: "success", Inactive: "neutral-subtle", Maintenance: "warning" } as const; return <Badge variant={v[s]}>{s}</Badge> } },
+const memberColumns: ColumnDef<Member>[] = [
+  createSelectColumn<Member>(),
+  {
+    accessorKey: "name",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
+    cell:   ({ row }) => row.original.name,
+    meta:   { title: "Member", width: 180 },
+  },
+  {
+    accessorKey: "membership",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Membership" />,
+    cell:   ({ row }) => <Badge variant="outline">{row.original.membership}</Badge>,
+    meta:   { title: "Membership", width: 130 },
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    cell:   ({ row }) => {
+      const s = row.original.status
+      const v = {
+        "Active":    "success",
+        "Pending":   "warning",
+        "Lapsed":    "neutral-subtle",
+        "Cancelled": "destructive",
+      } as const
+      return <Badge variant={v[s]}>{s}</Badge>
+    },
+    meta: { title: "Status", width: 120 },
+  },
+  {
+    accessorKey: "joined",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
+    cell:   ({ row }) => row.original.joined,
+    meta:   { title: "Joined", width: 130 },
+  },
+  {
+    accessorKey: "expires",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Expires" />,
+    cell:   ({ row }) => row.original.expires,
+    meta:   { title: "Expires", width: 130 },
+  },
+  {
+    accessorKey: "balance",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Balance" />,
+    cell:   ({ row }) => row.original.balance === 0 ? "—" : `£${row.original.balance.toFixed(2)}`,
+    meta:   { title: "Balance", align: "right", tabularNums: true, width: 110 },
+  },
+  {
+    accessorKey: "lastBooking",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Last booking" />,
+    cell:   ({ row }) => row.original.lastBooking,
+    meta:   { title: "Last booking", width: 140 },
+  },
+  {
+    accessorKey: "totalBookings",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Total bookings" />,
+    cell:   ({ row }) => row.original.totalBookings,
+    meta:   { title: "Total bookings", align: "right", tabularNums: true, width: 140 },
+  },
+  {
+    accessorKey: "coach",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Assigned coach" />,
+    cell:   ({ row }) => row.original.coach,
+    meta:   { title: "Assigned coach", width: 160 },
+  },
+  {
+    accessorKey: "homeClub",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Home club" />,
+    cell:   ({ row }) => row.original.homeClub,
+    meta:   { title: "Home club", width: 160 },
+  },
+  {
+    accessorKey: "phone",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Phone" />,
+    cell:   ({ row }) => row.original.phone,
+    meta:   { title: "Phone", cellVariant: "secondary", tabularNums: true, width: 160 },
+  },
+  {
+    accessorKey: "email",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+    cell:   ({ row }) => row.original.email,
+    meta:   { title: "Email", cellVariant: "secondary", width: 220 },
+  },
 ]
 
 export default function TablesPage() {
+  const [courts, setCourts] = React.useState<Court[]>(courtsInitial)
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Toaster />
@@ -112,8 +302,17 @@ export default function TablesPage() {
         <Section title="Table" description="Basic HTML table for simple structured data.">
           <Row label="Default">
             <Table>
-              <TableCaption>Recent bookings — Court 1</TableCaption>
-              <TableHeader><TableRow><TableHead>Ref</TableHead><TableHead>Customer</TableHead><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+              <TableCaption>Court 1 bookings · today</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ref</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {[
                   { ref: "BK-3E83", customer: "Rob Thomas",    date: "28 Mar 2026", time: "13:00–14:00", status: "Confirmed", amount: "£12.00" },
@@ -126,7 +325,11 @@ export default function TablesPage() {
                     <TableCell>{row.customer}</TableCell>
                     <TableCell>{row.date}</TableCell>
                     <TableCell>{row.time}</TableCell>
-                    <TableCell><Badge variant={row.status === "Confirmed" ? "success" : row.status === "Pending" ? "pending" : "destructive"}>{row.status}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant={row.status === "Confirmed" ? "success" : row.status === "Pending" ? "pending" : "destructive"}>
+                        {row.status}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right">{row.amount}</TableCell>
                   </TableRow>
                 ))}
@@ -135,59 +338,121 @@ export default function TablesPage() {
           </Row>
         </Section>
 
-        <Section title="DataTableFixed" description="Fixed column widths, sticky header, pinned columns, horizontal scroll, resizing.">
-          <Row label="Bookings — sticky header, pinned columns, bulk actions, export">
+        <Section
+          title="DataTable"
+          description="Fluid-width admin data table. Select rows to reveal the bulk action bar above the table."
+        >
+          <Row label="Court equipment inventory">
             <div className="w-full">
-              <DataTableProvider defaults={{ resizable: true, stickyHeader: true, maxHeight: "480px", stickyColumns: { start: 2, end: 1 } }}>
-                <DataTableFixed
-                  data={demoBookings} columns={fixedColumns} searchColumn="customer" searchPlaceholder="Search customer…"
-                  stickyHeader maxHeight="480px" stickyColumns={{ start: 2, end: 1 }} resizable exportable exportFilename="bookings" defaultPageSize={8}
-                  onRowClick={(row: DemoBooking) => toast(`Clicked: ${row.ref}`)}
-                  rowActions={[
-                    { label: "View booking",   onClick: (r: DemoBooking) => toast.info(`Viewing ${r.ref}`) },
-                    { label: "Edit booking",   onClick: (r: DemoBooking) => toast(`Editing ${r.ref}`) },
-                    { label: "Cancel booking", onClick: (r: DemoBooking) => toast.error(`${r.ref} cancelled`), variant: "destructive" },
-                  ]}
-                  bulkActions={[
-                    { label: "Export selected", variant: "outline",     onClick: (rows: DemoBooking[]) => toast(`Exporting ${rows.length} rows`) },
-                    { label: "Cancel selected", variant: "destructive", onClick: (rows: DemoBooking[]) => toast.error(`${rows.length} bookings cancelled`) },
-                  ]}
-                  emptyMessage="No bookings found."
-                />
-              </DataTableProvider>
-            </div>
-          </Row>
-        </Section>
-
-        <Section title="DataTableFluid" description="Fills container width, columns share available space.">
-          <Row label="Members — fluid columns, row actions, export">
-            <div className="w-full">
-              <StickyTableHeader topOffset="65px">
-                <DataTableFluid
-                  data={demoMembers} columns={fluidColumns} searchColumn="name" searchPlaceholder="Search member…"
-                  exportable exportFilename="members" defaultPageSize={8}
-                  onRowClick={(row: DemoMember) => toast(`Clicked: ${row.name}`)}
-                  rowActions={[
-                    { label: "View profile",    onClick: (r: DemoMember) => toast.info(`Viewing ${r.name}`) },
-                    { label: "Edit membership", onClick: (r: DemoMember) => toast(`Editing ${r.name}`) },
-                    { label: "Remove member",   onClick: (r: DemoMember) => toast.error(`${r.name} removed`), variant: "destructive" },
-                  ]}
-                  emptyMessage="No members found."
-                />
-              </StickyTableHeader>
-            </div>
-          </Row>
-        </Section>
-
-        <Section title="DataTableSortable" description="Drag to manually reorder rows.">
-          <Row label="Courts — drag to reorder">
-            <div className="w-full max-w-2xl">
-              <DataTableSortable
-                data={demoCourts}
-                columns={sortableColumns}
-                onOrderChange={(rows) => toast.success(`Order saved: ${rows.map(r => r.name).join(", ")}`)}
+              <DataTable
+                data={demoEquipment}
+                columns={equipmentColumns}
+                getRowId={(r) => r.id}
+                searchColumn="name"
+                searchPlaceholder="Search equipment…"
+                defaultPageSize={8}
+                bulkActions={[
+                  {
+                    label:   "Mark as available",
+                    variant: "outline",
+                    onClick: (rows: EquipmentItem[]) =>
+                      toast.success(`${rows.length} item${rows.length === 1 ? "" : "s"} marked available`),
+                  },
+                  {
+                    label:   "Retire selected",
+                    variant: "destructive",
+                    onClick: (rows: EquipmentItem[]) =>
+                      toast.error(`${rows.length} item${rows.length === 1 ? "" : "s"} retired`),
+                  },
+                ]}
+                rowActions={[
+                  { label: "View details", onClick: (r: EquipmentItem) => toast.info(`Viewing ${r.name}`) },
+                  { label: "Edit item",    onClick: (r: EquipmentItem) => toast(`Editing ${r.name}`) },
+                  { label: "Retire item",  onClick: (r: EquipmentItem) => toast.error(`${r.name} retired`), variant: "destructive" },
+                ]}
+                emptyMessage="Try adjusting your search or filters."
               />
             </div>
+          </Row>
+        </Section>
+
+        <Section
+          title="DataTable — sortable rows"
+          description="Drag rows by the grip handle to change their order. Sets the court display order shown to members."
+        >
+          <Row label="Court display order — drag to reorder">
+            <div className="w-full">
+              <DataTable
+                data={courts}
+                columns={courtColumns}
+                getRowId={(r) => r.id}
+                sortable
+                onReorder={(next) => {
+                  setCourts(next)
+                  toast.success("Court order updated")
+                }}
+                defaultPageSize={10}
+                emptyMessage="No courts configured."
+              />
+            </div>
+          </Row>
+        </Section>
+
+        <Section
+          title="DataTableFixed"
+          description="Wide dataset with pinned columns and horizontal scroll. First 2 columns pinned left (select + member name). Row actions auto-pin right."
+        >
+          <Row label="Club members — scroll horizontally to see pinned columns stay in place">
+            <div className="w-full">
+              <DataTableFixed
+                data={demoMembers}
+                columns={memberColumns}
+                getRowId={(r) => r.id}
+                leftPinCount={2}
+                searchColumn="name"
+                searchPlaceholder="Search members…"
+                defaultPageSize={10}
+                bulkActions={[
+                  {
+                    label:   "Send renewal reminder",
+                    variant: "outline",
+                    onClick: (rows: Member[]) =>
+                      toast.success(`Reminder sent to ${rows.length} member${rows.length === 1 ? "" : "s"}`),
+                  },
+                  {
+                    label:   "Archive selected",
+                    variant: "destructive",
+                    onClick: (rows: Member[]) =>
+                      toast.error(`${rows.length} member${rows.length === 1 ? "" : "s"} archived`),
+                  },
+                ]}
+                rowActions={[
+                  { label: "View profile", onClick: (m: Member) => toast.info(`Viewing ${m.name}`) },
+                  { label: "Edit member",  onClick: (m: Member) => toast(`Editing ${m.name}`) },
+                  { label: "Archive",      onClick: (m: Member) => toast.error(`${m.name} archived`), variant: "destructive" },
+                ]}
+                emptyMessage="No members match your filters."
+              />
+            </div>
+          </Row>
+        </Section>
+
+        <Section title="InvoiceTable" description="Specialised table with summary rows for invoices.">
+          <Row label="Default">
+            <InvoiceTable
+              items={[
+                { id: 1, name: "Court hire · Court 1",    description: "90 minutes · peak time",        sku: "CRT-01-PK", qty: 1, unitPrice: "£18.00",  total: "£18.00"  },
+                { id: 2, name: "Racquet hire",            description: "Wilson Pro Staff · per hour",   sku: "RAQ-W001",  qty: 2, unitPrice: "£8.00",   total: "£16.00"  },
+                { id: 3, name: "Tennis balls",            description: "Wilson US Open · tube of 4",    sku: "BAL-W004",  qty: 1, unitPrice: "£3.00",   total: "£3.00"   },
+                { id: 4, name: "Coaching session",        description: "1-on-1 · 45 minutes · Sean D.", sku: "CCH-1TO1",  qty: 1, unitPrice: "£42.00",  total: "£42.00"  },
+                { id: 5, name: "Club membership top-up",  description: "Junior · quarterly extension",  sku: "MEM-JR-Q",  qty: 1, unitPrice: "£65.00",  total: "£65.00"  },
+              ]}
+              summary={[
+                { label: "Subtotal", amount: "£144.00" },
+                { label: "Tax",      amount: "£11.52"  },
+                { label: "Total",    amount: "£155.52", bold: true },
+              ]}
+            />
           </Row>
         </Section>
 

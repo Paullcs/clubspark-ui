@@ -1,7 +1,10 @@
 {
     "$description": "Test Public — red primary, blue accent, pure grey neutral, large radius",
     "$theme": "theme-test-public",
-  
+
+    "logo-light": { "$value": "/logos/ef-logo-light.svg", "$type": "string" },
+    "logo-dark":  { "$value": "/logos/ef-logo-dark.svg",  "$type": "string" },
+
     "primary-50":  { "$value": "hsl(0 100% 97%)", "$type": "color" },
     "primary-100": { "$value": "hsl(0 100% 94%)", "$type": "color" },
     "primary-200": { "$value": "hsl(0 100% 88%)", "$type": "color" },
@@ -12,7 +15,7 @@
     "primary-700": { "$value": "hsl(0 100% 40%)", "$type": "color" },
     "primary-800": { "$value": "hsl(0 100% 30%)", "$type": "color" },
     "primary-900": { "$value": "hsl(0 100% 20%)", "$type": "color" },
-  
+
     "accent-50":  { "$value": "hsl(216 100% 97%)", "$type": "color" },
     "accent-100": { "$value": "hsl(216 100% 93%)", "$type": "color" },
     "accent-200": { "$value": "hsl(216 100% 86%)", "$type": "color" },
@@ -23,7 +26,7 @@
     "accent-700": { "$value": "hsl(216 100% 34%)", "$type": "color" },
     "accent-800": { "$value": "hsl(216 100% 26%)", "$type": "color" },
     "accent-900": { "$value": "hsl(216 100% 18%)", "$type": "color" },
-  
+
     "neutral-50":  { "$value": "hsl(0 0% 98%)",  "$type": "color" },
     "neutral-100": { "$value": "hsl(0 0% 94%)",  "$type": "color" },
     "neutral-200": { "$value": "hsl(0 0% 88%)",  "$type": "color" },
@@ -34,10 +37,10 @@
     "neutral-700": { "$value": "hsl(0 0% 26%)",  "$type": "color" },
     "neutral-800": { "$value": "hsl(0 0% 16%)",  "$type": "color" },
     "neutral-900": { "$value": "hsl(0 0% 8%)",   "$type": "color" },
-  
+
     "font-body":    { "$value": "DM Sans, sans-serif", "$type": "fontFamily" },
     "font-heading": { "$value": "DM Sans, sans-serif", "$type": "fontFamily" },
-  
+
     "background":        { "$value": "hsl(0 0% 100%)",  "$type": "color" },
     "foreground":        { "$value": "hsl(0 0% 0%)",     "$type": "color" },
     "card":              { "$value": "hsl(0 0% 100%)",   "$type": "color" },
@@ -63,18 +66,17 @@
     "disabled-text":     { "$value": "hsl(0 0% 62%)",    "$type": "color" },
     "disabled-border":   { "$value": "hsl(0 0% 88%)",    "$type": "color" },
     "placeholder":       { "$value": "hsl(0 0% 62%)",    "$type": "color" },
-  
+
     "accent-btn":            { "$value": "hsl(216 100% 50%)", "$type": "color" },
     "accent-btn-foreground": { "$value": "hsl(0 0% 100%)",    "$type": "color" },
-  
-    "radius":     { "$value": "1.5rem",                "$type": "dimension" },
-    "height-sm":  { "$value": "2.25rem",               "$type": "dimension" },
-    "height-md":  { "$value": "2.75rem",               "$type": "dimension" },
-    "height-lg":  { "$value": "3.25rem",               "$type": "dimension" },
-    "height-xl":  { "$value": "4rem",                  "$type": "dimension" },
-    "padding-sm": { "$value": "0 1rem",                "$type": "spacing"   },
-    "padding-md": { "$value": "0 1.25rem",             "$type": "spacing"   },
-    "padding-lg": { "$value": "0 1.75rem",             "$type": "spacing"   },
-    "padding-xl": { "$value": "0 2.25rem",             "$type": "spacing"   }
-  }
-  
+
+    "radius":     { "$value": "1.5rem",   "$type": "dimension" },
+    "height-sm":  { "$value": "2.25rem",  "$type": "dimension" },
+    "height-md":  { "$value": "2.75rem",  "$type": "dimension" },
+    "height-lg":  { "$value": "3.25rem",  "$type": "dimension" },
+    "height-xl":  { "$value": "4rem",     "$type": "dimension" },
+    "padding-sm": { "$value": "0 1rem",   "$type": "spacing"   },
+    "padding-md": { "$value": "0 1.25rem","$type": "spacing"   },
+    "padding-lg": { "$value": "0 1.75rem","$type": "spacing"   },
+    "padding-xl": { "$value": "0 2.25rem","$type": "spacing"   }
+}
