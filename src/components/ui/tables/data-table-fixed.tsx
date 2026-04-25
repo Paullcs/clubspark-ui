@@ -1,63 +1,53 @@
-"use client"
+"use client";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DataTableFixed
-//
-// Admin data table with pinned columns + horizontal scroll. Suited to dense
-// datasets where the row is wider than the viewport.
-//
-// Built entirely from library primitives. Column defs pass `meta` only — no
-// inline className at call sites.
-//
-// Styling contract:
-//   - Headers use <DataTableColumnHeader>
-//   - Cells get classes from density + meta via getCellClasses
-//   - Outer border comes from <DataTableShell>
-//   - Pinned/scroll divider uses `border-border` token, no drop shadows
-//
-// Feature flags (all optional):
-//   leftPinned / rightPinned → arrays of column ids to pin
-//   searchColumn             → toolbar search
-//   exportable               → CSV export
-//   rowActions               → "..." menu per row (appended to rightPinned)
-//   bulkActions              → bulk action bar when rows selected
-// ─────────────────────────────────────────────────────────────────────────────
-
-import * as React from "react"
-import {
-  ColumnDef,
+import type {
   ColumnFiltersState,
   ColumnPinningState,
-  SortingState,
+  Row,
+  RowSelectionState,
   VisibilityState,
+} from "@tanstack/react-table";
+import {
+  type Column,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 import {
-  Settings2Icon,
-  DownloadIcon,
-  MoreHorizontalIcon,
-  FileTextIcon,
-} from "lucide-react"
+  ArrowDown,
+  ArrowUp,
+  CheckCheckIcon,
+  CheckCircle,
+  ChevronsUpDown,
+  Clock,
+  LoaderIcon,
+  MoreHorizontal,
+  Package,
+  PieChart,
+  RefreshCcw,
+} from "lucide-react";
+import type { CSSProperties } from "react";
+import * as React from "react";
+import { z } from "zod";
 
-// Library primitives.
-import { Button } from "@/components/ui/button"
-import { SearchInput } from "@/components/ui/search-input"
-import { Skeleton } from "@/components/ui/skeleton"
-import { EmptyState } from "@/components/ui/empty-state"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -65,370 +55,778 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/tables/table"
+} from "@/components/ui/tables/table";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-import {
-  BulkAction,
-  BulkActionBar,
-  DataTableColumnMeta,
-  DataTableShell,
-  DensityOption,
-  DensityToggle,
-  PaginationBar,
-  RowAction,
-  densityConfig,
-  exportToCsv,
-  getCellClasses,
-  getHeaderClasses,
-  getPinnedColumnStyles,
-} from "@/components/ui/tables/data-table-core"
+const DATA_URL =
+  "https://raw.githubusercontent.com/zerostaticthemes/shadcnblocks-library-data/refs/heads/main/data/orders-ecommerce-sample.json";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+type UseDataTableOptions<TData> = {
+  data: Array<TData>;
+  columns: Array<ColumnDef<TData, unknown>>;
+  getRowId?: (row: TData) => string;
+  initialSorting?: SortingState;
+  initialGlobalFilter?: string;
+  initialFilters?: ColumnFiltersState;
+  initialVisibility?: VisibilityState;
+  initialSelection?: RowSelectionState;
+  initialColumnPinning?: ColumnPinningState;
+  enableRowSelection?: boolean;
+};
 
-export type DataTableFixedProps<TData> = {
-  data:     TData[]
-  columns:  ColumnDef<TData, any>[]
-  getRowId: (row: TData) => string
+type ColumnStyleMeta = {
+  align?: "left" | "center" | "right";
+  headerClassName?: string;
+  cellClassName?: string;
+  className?: string;
+  width?: number | string;
+  minWidth?: number | string;
+  maxWidth?: number | string;
+};
 
-  /** Number of leading columns to pin to the left. Follows the order of `columns`. */
-  leftPinCount?:  number
-  /** Number of trailing columns to pin to the right. Row actions auto-append when `rowActions` is provided. */
-  rightPinCount?: number
+type ColumnWithPinning = {
+  getIsPinned?: () => "left" | "right" | false;
+  getIsLastColumn?: (position: "left" | "right") => boolean;
+  getIsFirstColumn?: (position: "left" | "right") => boolean;
+  getStart?: (position: "left" | "right") => number;
+  getAfter?: (position: "left" | "right") => number;
+  getSize?: () => number;
+};
 
-  searchColumn?:      string
-  searchPlaceholder?: string
-  toolbarLeft?:       React.ReactNode
-  toolbarRight?:      React.ReactNode
+function getColumnLayoutStyles(
+  meta: ColumnStyleMeta,
+  columnWithPinning: ColumnWithPinning,
+) {
+  const baseStyle: CSSProperties = {};
+  if (meta.width !== undefined) {
+    baseStyle.width =
+      typeof meta.width === "number" ? `${meta.width}px` : meta.width;
+  }
+  if (meta.minWidth !== undefined) {
+    baseStyle.minWidth =
+      typeof meta.minWidth === "number" ? `${meta.minWidth}px` : meta.minWidth;
+  }
+  if (meta.maxWidth !== undefined) {
+    baseStyle.maxWidth =
+      typeof meta.maxWidth === "number" ? `${meta.maxWidth}px` : meta.maxWidth;
+  }
+  if (
+    baseStyle.width === undefined &&
+    typeof columnWithPinning.getSize === "function"
+  ) {
+    const computedWidth = columnWithPinning.getSize();
+    if (typeof computedWidth === "number" && Number.isFinite(computedWidth)) {
+      baseStyle.width = `${computedWidth}px`;
+    }
+  }
 
-  defaultPageSize?: number
-  pageSizeOptions?: number[]
+  const pinned = columnWithPinning.getIsPinned?.() ?? false;
+  const pinnedStyle: CSSProperties = {};
+  let lastPinned: "left" | "right" | undefined;
 
-  onRowClick?: (row: TData) => void
-  rowActions?: RowAction<TData>[]
-  bulkActions?: BulkAction<TData>[]
+  if (pinned) {
+    pinnedStyle.position = "sticky";
+    pinnedStyle.zIndex = 1;
 
-  exportable?:     boolean
-  exportFilename?: string
-  loading?:        boolean
-  loadingRows?:    number
+    if (pinned === "left") {
+      const start = columnWithPinning.getStart?.("left") ?? 0;
+      pinnedStyle.left = `${start}px`;
+      if (columnWithPinning.getIsLastColumn?.("left")) {
+        lastPinned = "left";
+      }
+    }
 
-  emptyMessage?: string
+    if (pinned === "right") {
+      const after = columnWithPinning.getAfter?.("right") ?? 0;
+      pinnedStyle.right = `${after}px`;
+      if (columnWithPinning.getIsFirstColumn?.("right")) {
+        lastPinned = "right";
+      }
+    }
+
+    const resolvedWidth =
+      baseStyle.width ??
+      (typeof columnWithPinning.getSize === "function"
+        ? columnWithPinning.getSize()
+        : undefined);
+    if (resolvedWidth !== undefined) {
+      pinnedStyle.width =
+        typeof resolvedWidth === "number"
+          ? `${resolvedWidth}px`
+          : resolvedWidth;
+    }
+  }
+
+  const alignClass =
+    meta.align === "center"
+      ? "text-center"
+      : meta.align === "right"
+        ? "text-right"
+        : meta.align === "left"
+          ? "text-left"
+          : undefined;
+
+  return { baseStyle, pinnedStyle, pinned, lastPinned, alignClass };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
-export function DataTableFixed<TData>({
-  data,
-  columns: userColumns,
-  getRowId,
-  leftPinCount  = 0,
-  rightPinCount = 0,
-  searchColumn,
-  searchPlaceholder = "Search…",
-  toolbarLeft,
-  toolbarRight,
-  defaultPageSize = 8,
-  pageSizeOptions = [5, 8, 10, 20],
-  onRowClick,
-  rowActions,
-  bulkActions,
-  exportable = false,
-  exportFilename = "export",
-  loading = false,
-  loadingRows = 8,
-  emptyMessage = "No results found.",
-}: DataTableFixedProps<TData>) {
-
-  const [sorting, setSorting]                   = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters]       = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection]         = React.useState({})
-  const [pageSize, setPageSize]                 = React.useState(defaultPageSize)
-  const [density, setDensity]                   = React.useState<DensityOption>("default")
-
-  // ── Compose columns: user columns + optional row actions ────────────────────
-  const columns = React.useMemo<ColumnDef<TData, any>[]>(() => {
-    const cols = [...userColumns]
-    if (rowActions?.length) {
-      cols.push({
-        id: "__actions",
-        header: () => null,
-        cell: ({ row }) => (
-          <div className="flex justify-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="size-8 p-0" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontalIcon className="size-4" />
-                  <span className="sr-only">Row actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {rowActions.map((action, i) => (
-                  <DropdownMenuItem
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); action.onClick(row.original) }}
-                    className={action.variant === "destructive" ? "text-destructive focus:text-destructive" : ""}
-                  >
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
-        enableSorting: false,
-        enableHiding:  false,
-        meta: { title: "Actions", width: 56, align: "center" },
-      })
-    }
-    return cols
-  }, [userColumns, rowActions])
-
-  // ── Compute final pinning state from counts
-  // Takes the first N / last N column ids from the composed column list (after
-  // rowActions has been appended). Row actions are always included in the right
-  // pin when present — they stay sticky even if rightPinCount is 0.
-  const columnPinning = React.useMemo<ColumnPinningState>(() => {
-    const ids = columns.map((c) => c.id ?? (c as any).accessorKey).filter(Boolean) as string[]
-
-    const left  = ids.slice(0, Math.max(0, leftPinCount))
-
-    // Right pin: last N columns, PLUS the row actions column if present and not already included.
-    // We compute rightIds from the non-left portion so a left pin can never double-count into right.
-    const nonLeft = ids.slice(left.length)
-    const rightFromCount = rightPinCount > 0
-      ? nonLeft.slice(Math.max(0, nonLeft.length - rightPinCount))
-      : []
-    const right = [...rightFromCount]
-    if (rowActions?.length && !right.includes("__actions")) {
-      right.push("__actions")
-    }
-
-    return { left, right }
-  }, [columns, leftPinCount, rightPinCount, rowActions])
-
-  const tableInstance = useReactTable({
+export function useDataTable<TData>(options: UseDataTableOptions<TData>) {
+  const {
     data,
     columns,
     getRowId,
-    state: { sorting, columnFilters, columnVisibility, rowSelection, columnPinning },
-    enableRowSelection: true,
-    enableMultiSort:    true,
-    onRowSelectionChange:     setRowSelection,
-    onSortingChange:          setSorting,
-    onColumnFiltersChange:    setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel:          getCoreRowModel(),
-    getSortedRowModel:        getSortedRowModel(),
-    getFilteredRowModel:      getFilteredRowModel(),
-    getPaginationRowModel:    getPaginationRowModel(),
-    initialState: { pagination: { pageSize } },
-  })
+    initialSorting = [],
+    initialSelection = {},
+    enableRowSelection = true,
+    initialColumnPinning = {},
+  } = options;
 
-  React.useEffect(() => { tableInstance.setPageSize(pageSize) }, [pageSize, tableInstance])
+  const [sorting, setSorting] = React.useState<SortingState>(initialSorting);
+  const [rowSelection, setRowSelection] =
+    React.useState<RowSelectionState>(initialSelection);
+  const [columnPinning, setColumnPinning] =
+    React.useState<ColumnPinningState>(initialColumnPinning);
 
-  const selectedRows  = tableInstance.getFilteredSelectedRowModel().rows
-  const selectedCount = selectedRows.length
-  const totalCount    = tableInstance.getFilteredRowModel().rows.length
+  const table = useReactTable({
+    data,
+    columns,
+    getRowId,
+    state: {
+      sorting,
+      columnPinning,
+      rowSelection,
+    },
+    onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    onColumnPinningChange: setColumnPinning,
+    enableRowSelection,
+  });
 
-  /** Display title from meta.title, falling back to id. */
-  const columnTitle = (columnId: string): string => {
-    const col  = tableInstance.getColumn(columnId)
-    const meta = col?.columnDef.meta as DataTableColumnMeta | undefined
-    return meta?.title ?? columnId
+  return {
+    table,
+    sorting,
+    setSorting,
+    rowSelection,
+    setRowSelection,
+    columnPinning,
+    setColumnPinning,
+  };
+}
+
+type DataTableColumnHeaderProps<TData, TValue> = {
+  column: Column<TData, TValue>;
+  title: string;
+};
+
+export const DataTableColumnHeader = <TData, TValue>({
+  column,
+  title,
+}: DataTableColumnHeaderProps<TData, TValue>) => {
+  const canSort = column.getCanSort();
+  const sorted = column.getIsSorted();
+
+  if (!canSort) {
+    return (
+      <span className="flex h-8 items-center text-sm font-medium text-foreground">
+        {title}
+      </span>
+    );
   }
 
   return (
-    <div className="space-y-3">
+    <Button
+      variant="ghost"
+      size="sm"
+      className="flex h-8 items-center gap-2 px-0 text-sm font-medium text-foreground"
+      onClick={() => column.toggleSorting(sorted === "asc")}
+    >
+      <span>{title}</span>
+      {sorted === "desc" ? (
+        <ArrowDown className="h-4 w-4" />
+      ) : sorted === "asc" ? (
+        <ArrowUp className="h-4 w-4" />
+      ) : (
+        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+      )}
+    </Button>
+  );
+};
 
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          {searchColumn && (
-            <SearchInput
-              placeholder={searchPlaceholder}
-              value={(tableInstance.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-              onChange={(e) => tableInstance.getColumn(searchColumn)?.setFilterValue(e.target.value)}
-              onClear={() => tableInstance.getColumn(searchColumn)?.setFilterValue("")}
-              size="sm"
-              className="w-64"
-            />
-          )}
-          {toolbarLeft}
+interface DataTableRowActionsProps<TData> {
+  row: Row<TData>;
+  schema: z.ZodSchema;
+  itemName: string;
+  idField?: string;
+}
+
+export function DataTableRowActions<TData>({
+  row,
+  schema,
+  itemName,
+  idField = "id",
+}: DataTableRowActionsProps<TData>) {
+  const item = schema.parse(row.original) as TData;
+  const handleCopy = async () => {
+    const itemRecord = item as Record<string, unknown>;
+    const value = itemRecord[idField] ?? itemRecord.id;
+    if (!value) return;
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.clipboard ||
+      typeof navigator.clipboard.writeText !== "function"
+    ) return;
+    try {
+      await navigator.clipboard.writeText(String(value));
+    } catch (error) {
+      console.error("Could not copy to clipboard", error);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8 data-[state=open]:bg-muted"
+        >
+          <MoreHorizontal />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem onClick={handleCopy}>
+          Copy {itemName} ID
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Edit {itemName}</DropdownMenuItem>
+        <DropdownMenuItem>View details</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export const schema = z.object({
+  id: z.string(),
+  purchased: z.string(),
+  items: z.number(),
+  customer: z.string(),
+  customer_email: z.string(),
+  customer_segment: z.string(),
+  fulfillment_channel: z.string(),
+  shipping_service: z.string(),
+  warehouse: z.string(),
+  order_status: z.string(),
+  payment_status: z.string(),
+  payment_method: z.string(),
+  tracking_number: z.string(),
+  assigned_to: z.string(),
+  return_status: z.string(),
+  coupon_code: z.string().nullable(),
+  gift: z.boolean(),
+  notes: z.string(),
+});
+
+export type Order = z.infer<typeof schema>;
+
+export type StatusOption = {
+  label: string;
+  value: string;
+  icon?: React.ComponentType<{ className?: string }>;
+};
+
+export const orderStatuses: StatusOption[] = [
+  { label: "Fulfilled", value: "Fulfilled", icon: CheckCircle },
+  { label: "Ready for pickup", value: "Ready for pickup", icon: Package },
+  { label: "Unfulfilled", value: "Unfulfilled", icon: Clock },
+];
+
+export const paymentStatuses: StatusOption[] = [
+  { label: "Paid", value: "Paid", icon: CheckCheckIcon },
+  { label: "Pending", value: "Pending", icon: LoaderIcon },
+  { label: "Refunded", value: "Refunded", icon: RefreshCcw },
+  { label: "Partially refunded", value: "Partially refunded", icon: PieChart },
+];
+
+const createStatusLookup = (options: StatusOption[]) =>
+  options.reduce<Record<string, StatusOption>>((acc, option) => {
+    acc[option.value] = option;
+    return acc;
+  }, {});
+
+const orderStatusLookup = createStatusLookup(orderStatuses);
+const paymentStatusLookup = createStatusLookup(paymentStatuses);
+
+export const getOrderStatusMeta = (status: string) => orderStatusLookup[status];
+export const getPaymentStatusMeta = (status: string) => paymentStatusLookup[status];
+
+export const getStatusVariant = (status: string) => {
+  switch (status) {
+    case "Fulfilled": return "default";
+    case "Ready for pickup": return "secondary";
+    case "Unfulfilled": return "outline";
+    default: return "outline";
+  }
+};
+
+export const getPaymentVariant = (status: string) => {
+  switch (status) {
+    case "Paid": return "default";
+    case "Pending": return "secondary";
+    case "Refunded": return "outline";
+    case "Partially refunded": return "outline";
+    default: return "outline";
+  }
+};
+
+export const columns: ColumnDef<z.infer<typeof schema>>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+        className="translate-y-[2px]"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="translate-y-[2px]"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    meta: {
+      width: 56,
+      minWidth: 48,
+      headerClassName: "px-2",
+      cellClassName: "px-2",
+      align: "center",
+    },
+  },
+  {
+    accessorKey: "id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Order" />
+    ),
+    cell: ({ row }) => (
+      <div className="w-[120px] font-mono">{row.original.id}</div>
+    ),
+    enableSorting: true,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "purchased",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Purchased" />
+    ),
+    cell: ({ row }) => {
+      const items = row.original.items;
+      return (
+        <div className="flex gap-2">
+          <div className="max-w-[320px] truncate font-medium">
+            {row.original.purchased}
+          </div>
+          {items ? <Badge variant="outline">{items}</Badge> : null}
         </div>
+      );
+    },
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "customer",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Customer" />
+    ),
+    cell: ({ row }) => (
+      <div className="max-w-[180px] truncate">{row.original.customer}</div>
+    ),
+  },
+  {
+    accessorKey: "customer_email",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Customer Email" />
+    ),
+    cell: ({ row }) => (
+      <span className="max-w-[240px] truncate text-xs sm:text-sm">
+        {row.original.customer_email}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "customer_segment",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Segment" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant="outline">{row.original.customer_segment}</Badge>
+    ),
+    meta: { className: "whitespace-nowrap" },
+    filterFn: (row, id, value) => {
+      if (!Array.isArray(value) || value.length === 0) return true;
+      return value.includes(String(row.getValue(id)));
+    },
+  },
+  {
+    accessorKey: "fulfillment_channel",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Fulfillment" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-xs whitespace-nowrap sm:text-sm">
+        {row.original.fulfillment_channel}
+      </span>
+    ),
+    meta: { className: "whitespace-nowrap" },
+    filterFn: (row, id, value) => {
+      if (!Array.isArray(value) || value.length === 0) return true;
+      return value.includes(String(row.getValue(id)));
+    },
+  },
+  {
+    accessorKey: "shipping_service",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Shipping Service" />
+    ),
+    cell: ({ row }) => (
+      <span className="max-w-[240px] truncate text-xs sm:text-sm">
+        {row.original.shipping_service}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "warehouse",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Warehouse" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-xs whitespace-nowrap sm:text-sm">
+        {row.original.warehouse}
+      </span>
+    ),
+    meta: { className: "whitespace-nowrap" },
+  },
+  {
+    accessorKey: "order_status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Order Status" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.order_status;
+      const statusMeta = getOrderStatusMeta(status);
+      const StatusIcon = statusMeta?.icon;
+      return (
         <div className="flex items-center gap-2">
-          {toolbarRight}
-          <DensityToggle value={density} onChange={setDensity} />
-          {exportable && (
-            <Button variant="outline" size="sm" onClick={() => exportToCsv(tableInstance.getFilteredRowModel().rows, userColumns, exportFilename)}>
-              <DownloadIcon className="size-4 mr-1.5" />
-              Export
-            </Button>
-          )}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Settings2Icon className="size-4 mr-1.5" />
-                Columns
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {tableInstance.getAllColumns().filter((c) => c.getCanHide()).map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.id}
-                  checked={col.getIsVisible()}
-                  onCheckedChange={(v) => col.toggleVisibility(!!v)}
-                >
-                  {columnTitle(col.id)}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Badge variant={getStatusVariant(status)} className="gap-1 whitespace-nowrap">
+            {StatusIcon ? <StatusIcon className="size-3" /> : null}
+            <span>{statusMeta?.label ?? status}</span>
+          </Badge>
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      if (!Array.isArray(value) || value.length === 0) return true;
+      return value.includes(String(row.getValue(id)));
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: "payment_status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Payment Status" />
+    ),
+    cell: ({ row }) => {
+      const status = row.original.payment_status;
+      const statusMeta = getPaymentStatusMeta(status);
+      const StatusIcon = statusMeta?.icon;
+      return (
+        <div className="flex items-center gap-2">
+          <Badge variant={getPaymentVariant(status)} className="gap-1 whitespace-nowrap">
+            {StatusIcon ? <StatusIcon className="size-3" /> : null}
+            <span>{statusMeta?.label ?? status}</span>
+          </Badge>
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      if (!Array.isArray(value) || value.length === 0) return true;
+      return value.includes(String(row.getValue(id)));
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: "payment_method",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Payment Method" />
+    ),
+    cell: ({ row }) => (
+      <div className="font-mono text-xs sm:text-sm">
+        {row.original.payment_method}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "items",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Items" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums sm:text-sm">
+        {row.original.items}
+      </span>
+    ),
+    meta: { align: "center", className: "tabular-nums" },
+  },
+  {
+    accessorKey: "tracking_number",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tracking" />
+    ),
+    cell: ({ row }) => (
+      <span className="font-mono text-xs sm:text-sm">
+        {row.original.tracking_number}
+      </span>
+    ),
+    meta: { className: "whitespace-nowrap" },
+  },
+  {
+    accessorKey: "assigned_to",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Assignee" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-xs whitespace-nowrap sm:text-sm">
+        {row.original.assigned_to}
+      </span>
+    ),
+    meta: { className: "whitespace-nowrap" },
+  },
+  {
+    accessorKey: "return_status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Return Status" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant="outline">{row.original.return_status}</Badge>
+    ),
+    filterFn: (row, id, value) => {
+      if (!Array.isArray(value) || value.length === 0) return true;
+      return value.includes(String(row.getValue(id)));
+    },
+  },
+  {
+    accessorKey: "coupon_code",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Coupon" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-xs sm:text-sm">
+        {row.original.coupon_code ?? "—"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "gift",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Gift" />
+    ),
+    cell: ({ row }) => (
+      <Badge variant={row.original.gift ? "secondary" : "outline"}>
+        {row.original.gift ? "Yes" : "No"}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "notes",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Notes" />
+    ),
+    cell: ({ row }) => (
+      <span className="max-w-[240px] truncate text-xs sm:text-sm">
+        {row.original.notes}
+      </span>
+    ),
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <DataTableRowActions
+        row={row}
+        schema={schema}
+        itemName="order"
+        idField="id"
+      />
+    ),
+  },
+];
+
+export const DataTable15 = ({ className }: { className?: string }) => {
+  const [data, setData] = React.useState<Order[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let active = true;
+    const fetchData = async () => {
+      setError(null);
+      setIsLoading(true);
+      try {
+        const res = await fetch(DATA_URL);
+        if (!res.ok) {
+          const message = `Failed to fetch orders data (${res.status})`;
+          if (active) setError(message);
+          return;
+        }
+        const json = await res.json();
+        const parsed = schema.array().parse(json);
+        if (active) setData(parsed);
+      } catch (error) {
+        if (active) setError("Error fetching orders data");
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+    fetchData();
+    return () => { active = false; };
+  }, []);
+
+  const { table } = useDataTable({
+    data,
+    columns,
+    getRowId: (row) => row.id.toString(),
+    initialColumnPinning: { left: ["select"], right: ["actions"] },
+  });
+
+  const visibleColumnCount = Math.max(table.getVisibleLeafColumns().length, 1);
+  const visibleColumnIds = table.getVisibleLeafColumns().map((column) => column.id);
+  const rightPinnedColumnIdSet = new Set(table.getState().columnPinning.right ?? []);
+  const firstRightPinnedIndex = visibleColumnIds.findIndex((columnId) =>
+    rightPinnedColumnIdSet.has(columnId),
+  );
+  const rightStickyDividerTargetId =
+    firstRightPinnedIndex > 0 ? visibleColumnIds[firstRightPinnedIndex - 1] : null;
+
+  return (
+    <section className={cn("py-32", className)}>
+      <div className="container">
+        <div className="w-full">
+          <div className="mb-8 text-left">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Data Table With Pinned Columns
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              A data table with adjustable pinned columns.
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-lg border-2">
+            <div className="relative">
+              {isLoading ? (
+                <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                  <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                    <LoaderIcon className="h-4 w-4 animate-spin" />
+                    <span>Loading orders…</span>
+                  </div>
+                </div>
+              ) : null}
+              <Table className="border-separate border-spacing-0 [&_td]:border-border [&_tfoot_td]:border-t [&_th]:border-b [&_th]:border-border [&_tr]:border-none [&_tr:hover_td[data-pinned]]:bg-muted/50 [&_tr:not(:last-child)_td]:border-b [&_tr[data-state=selected]_td[data-pinned]]:bg-muted [&_tr[data-state=selected]:hover_td[data-pinned]]:bg-muted">
+                <TableHeader className="bg-muted">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => {
+                        const meta = (header.column.columnDef.meta as ColumnStyleMeta) ?? {};
+                        const columnWithPinning = header.column as unknown as ColumnWithPinning;
+                        const { baseStyle, pinnedStyle, pinned, lastPinned, alignClass } =
+                          getColumnLayoutStyles(meta, columnWithPinning);
+                        return (
+                          <TableHead
+                            key={header.id}
+                            colSpan={header.colSpan}
+                            style={{ ...baseStyle, ...pinnedStyle }}
+                            className={cn(
+                              "relative h-11 truncate border-r px-3 text-sm font-medium last:border-r-0 data-[pinned]:bg-muted/90 data-[pinned]:backdrop-blur-xs [&[data-pinned=left][data-last-col=left]]:border-r [&[data-pinned=right][data-last-col=right]]:border-l",
+                              header.column.id === rightStickyDividerTargetId && "!border-r-0",
+                              meta.className,
+                              meta.headerClassName,
+                              alignClass,
+                            )}
+                            data-pinned={pinned || undefined}
+                            data-last-col={lastPinned || undefined}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {error ? (
+                    <TableRow className="border-b last:border-b-0">
+                      <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-destructive">
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className="border-b last:border-b-0"
+                      >
+                        {row.getVisibleCells().map((cell) => {
+                          const meta = (cell.column.columnDef.meta as ColumnStyleMeta) ?? {};
+                          const columnWithPinning = cell.column as unknown as ColumnWithPinning;
+                          const { baseStyle, pinnedStyle, pinned, lastPinned, alignClass } =
+                            getColumnLayoutStyles(meta, columnWithPinning);
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              style={{ ...baseStyle, ...pinnedStyle }}
+                              className={cn(
+                                "truncate border-r p-3 py-2 text-sm last:border-r-0 data-[pinned]:bg-background/90 data-[pinned]:backdrop-blur-xs [&[data-pinned=left][data-last-col=left]]:border-r [&[data-pinned=right][data-last-col=right]]:border-l",
+                                cell.column.id === rightStickyDividerTargetId && "!border-r-0",
+                                meta.className,
+                                meta.cellClassName,
+                                alignClass,
+                              )}
+                              data-pinned={pinned || undefined}
+                              data-last-col={lastPinned || undefined}
+                            >
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow className="border-b last:border-b-0">
+                      <TableCell colSpan={visibleColumnCount} className="h-24 text-center text-sm text-muted-foreground">
+                        No results.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Bulk action bar */}
-      {bulkActions && (
-        <BulkActionBar
-          selectedCount={selectedCount}
-          selectedRows={selectedRows.map((r) => r.original)}
-          actions={bulkActions}
-          onClear={() => tableInstance.resetRowSelection()}
-        />
-      )}
-
-      {/* Table — border-separate required for sticky cells to render borders correctly */}
-      <DataTableShell>
-        <Table className="border-separate border-spacing-0">
-          <TableHeader>
-            {tableInstance.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="bg-table-header-bg hover:bg-table-header-bg border-0">
-                {hg.headers.map((header) => {
-                  const meta = header.column.columnDef.meta as DataTableColumnMeta | undefined
-                  const { style, pinned, lastPinned } = getPinnedColumnStyles(meta, header.column as any)
-                  const isInteractive = !header.isPlaceholder
-                    && header.column.id !== "__actions"
-                    && header.column.getCanSort()
-                  return (
-                    <TableHead
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      style={style}
-                      data-pinned={pinned || undefined}
-                      data-last-col={lastPinned || undefined}
-                      className={cn(
-                        // Base header — every cell gets a bottom border
-                        "border-b border-border",
-                        // Pinned cells get a solid token background so scrolling content doesn't show through
-                        "data-[pinned]:bg-table-header-bg",
-                        // Divider between the pinned zone and the scrolling zone
-                        "data-[last-col=left]:border-r data-[last-col=left]:border-border",
-                        "data-[last-col=right]:border-l data-[last-col=right]:border-border",
-                        isInteractive && "hover:bg-table-header-hover transition-colors duration-100",
-                        getHeaderClasses(meta),
-                      )}
-                    >
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              Array.from({ length: loadingRows }).map((_, i) => (
-                <TableRow key={i} className="border-0">
-                  {tableInstance.getVisibleLeafColumns().map((col) => {
-                    const meta = col.columnDef.meta as DataTableColumnMeta | undefined
-                    const { style, pinned, lastPinned } = getPinnedColumnStyles(meta, col as any)
-                    return (
-                      <TableCell
-                        key={col.id}
-                        style={style}
-                        data-pinned={pinned || undefined}
-                        data-last-col={lastPinned || undefined}
-                        className={cn(
-                          densityConfig[density].cell,
-                          "border-b border-border",
-                          "data-[pinned]:bg-background",
-                          "data-[last-col=left]:border-r data-[last-col=left]:border-border",
-                          "data-[last-col=right]:border-l data-[last-col=right]:border-border",
-                        )}
-                      >
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
-            ) : tableInstance.getRowModel().rows?.length ? (
-              tableInstance.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn("border-0", onRowClick && "cursor-pointer")}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined
-                    const { style, pinned, lastPinned } = getPinnedColumnStyles(meta, cell.column as any)
-                    const isSelected = row.getIsSelected()
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        style={style}
-                        data-pinned={pinned || undefined}
-                        data-last-col={lastPinned || undefined}
-                        className={cn(
-                          densityConfig[density].cell,
-                          "border-b border-border",
-                          // Pinned cells pick up the row's background so scroll content doesn't bleed through.
-                          // Selection tint is applied here too so pinned cells stay in sync.
-                          "data-[pinned]:bg-background",
-                          isSelected && "bg-table-row-selected data-[pinned]:bg-table-row-selected",
-                          "data-[last-col=left]:border-r data-[last-col=left]:border-border",
-                          "data-[last-col=right]:border-l data-[last-col=right]:border-border",
-                          getCellClasses(meta),
-                        )}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow className="border-0">
-                <TableCell colSpan={columns.length} className="p-0 border-b border-border">
-                  <EmptyState icon={FileTextIcon} heading="No results" description={emptyMessage} size="sm" />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </DataTableShell>
-
-      {/* Pagination — outside the shell, under the table */}
-      <PaginationBar
-        pageIndex={tableInstance.getState().pagination.pageIndex}
-        pageCount={tableInstance.getPageCount()}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        pageSizeOptions={pageSizeOptions}
-        canPrevious={tableInstance.getCanPreviousPage()}
-        canNext={tableInstance.getCanNextPage()}
-        onFirst={() => tableInstance.setPageIndex(0)}
-        onPrevious={() => tableInstance.previousPage()}
-        onNext={() => tableInstance.nextPage()}
-        onLast={() => tableInstance.setPageIndex(tableInstance.getPageCount() - 1)}
-        onPageSizeChange={(n) => setPageSize(n)}
-        onPageChange={(i) => tableInstance.setPageIndex(i)}
-      />
-
-    </div>
-  )
-}
+    </section>
+  );
+};
